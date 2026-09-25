@@ -11,6 +11,7 @@ import '../../core/socket_service.dart';
 import '../../core/database_helper.dart';
 import 'sos_alerts_panel.dart';
 import 'emergency_sos_box.dart';
+import 'tinyml_control_card.dart';
 import '../../theme/app_colors.dart';
 
 class UserHomeTab extends StatefulWidget {
@@ -33,6 +34,7 @@ class _UserHomeTabState extends State<UserHomeTab>
     with AutomaticKeepAliveClientMixin {
   final _locationService = LocationService();
   final MapController _miniMapController = MapController();
+  final _sosBoxKey = GlobalKey<EmergencySosBoxState>();
 
   Position? _position;
   bool _loading = true;
@@ -187,6 +189,7 @@ class _UserHomeTabState extends State<UserHomeTab>
               ),
               const SizedBox(height: 16),
               EmergencySosBox(
+                key: _sosBoxKey,
                 user: widget.user,
                 api: widget.api,
                 onSosTap: () {
@@ -212,6 +215,13 @@ class _UserHomeTabState extends State<UserHomeTab>
                 },
                 onSosLocationTap: (ll) =>
                     widget.onNavigate?.call(1, target: ll),
+              ),
+              const SizedBox(height: 16),
+              TinyMLControlCard(
+                api: widget.api,
+                onAutoSosTriggered: (type, desc) {
+                   _sosBoxKey.currentState?.triggerSOS(anomalyType: type);
+                },
               ),
               const SizedBox(height: 24),
               Row(

@@ -30,10 +30,10 @@ class EmergencySosBox extends StatefulWidget {
   final Function(LatLng)? onSosLocationTap;
 
   @override
-  State<EmergencySosBox> createState() => _EmergencySosBoxState();
+  State<EmergencySosBox> createState() => EmergencySosBoxState();
 }
 
-class _EmergencySosBoxState extends State<EmergencySosBox>
+class EmergencySosBoxState extends State<EmergencySosBox>
     with AutomaticKeepAliveClientMixin {
   final _locationService = LocationService();
 
@@ -67,7 +67,7 @@ class _EmergencySosBoxState extends State<EmergencySosBox>
   // SOS Activation — State Machine Driven
   // ─────────────────────────────────────────────────────────
 
-  Future<void> _triggerSOS() async {
+  Future<void> triggerSOS({String? anomalyType, String? anomalyDesc}) async {
     final db = DatabaseHelper.instance;
 
     // Prevent double-trigger: check if already active
@@ -97,7 +97,7 @@ class _EmergencySosBoxState extends State<EmergencySosBox>
       reporterId: widget.user.id,
       lat: pos?.latitude,
       lng: pos?.longitude,
-      type: 'Emergency',
+      type: anomalyType ?? 'Emergency',
       status: SosStatus.activating,
     );
 
@@ -124,6 +124,18 @@ class _EmergencySosBoxState extends State<EmergencySosBox>
     // 4. Force a network sync
     SosLog.event(incident.uuid, 'IMMEDIATE_SYNC_ATTEMPT');
     await SosSyncEngine.instance.syncAll();
+    
+    // Always broadcast via BLE Mesh to alert nearby users regardless of network status!
+    MeshService.instance.startBroadcastingSOS({
+      'uuid': incident.uuid,
+      'type': incident.type,
+      'lat': pos?.latitude,
+      'lng': pos?.longitude,
+      'reporter_id': widget.user.id,
+      'reporter_name': widget.user.name,
+      'reporter_phone': widget.user.phone,
+      'hop_count': 0,
+    });
 
     final updated = await db.getIncidentByUuid(incident.uuid);
     if (updated != null && updated.status == SosStatus.activeOnline) {
@@ -132,29 +144,19 @@ class _EmergencySosBoxState extends State<EmergencySosBox>
           _activeSosId = updated.backendId;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('SOS Activated! Broadcasting to all responders...'),
+           SnackBar(
+            content: Text('SOS Activated! Broadcasting to Web & BLE Mesh...'),
             backgroundColor: AppColors.criticalRed,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
     } else if (mounted) {
-      MeshService.instance.startBroadcastingSOS({
-        'uuid': incident.uuid,
-        'type': incident.type,
-        'lat': pos?.latitude,
-        'lng': pos?.longitude,
-        'reporter_id': widget.user.id,
-        'reporter_name': widget.user.name,
-        'reporter_phone': widget.user.phone,
-        'hop_count': 0,
-      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+         SnackBar(
           content: Text('Offline! Broadcasting SOS via BLE Mesh...'),
           backgroundColor: Colors.orange,
-          duration: Duration(seconds: 4),
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -656,14 +658,14 @@ class _EmergencySosBoxState extends State<EmergencySosBox>
                               const Duration(milliseconds: 100),
                               (timer) {
                                 if (mounted) {
-                                  setState(() {
-                                    _sosHoldTicks++;
-                                    if (_sosHoldTicks >= 50) {
-                                      _sosHoldTimer?.cancel();
-                                      _sosFired = true;
-                                      _triggerSOS();
-                                    }
-                                  });
+                                    setState(() {
+                                      _sosHoldTicks++;
+                                      if (_sosHoldTicks >= 50) {
+                                        _sosHoldTimer?.cancel();
+                                        _sosFired = true;
+                                        triggerSOS();
+                                      }
+                                    });
                                 }
                               },
                             );

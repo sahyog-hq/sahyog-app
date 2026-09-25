@@ -5,7 +5,7 @@ class AppConfig {
   static const _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
   // Mac/Windows WiFi IP for physical devices & network access during local testing
-  static const localWifiIp = '192.168.0.106';
+  static const localWifiIp = '192.168.0.100';
   static const port = '3000';
 
   // Primary URL for iOS Simulator & macOS

@@ -16,6 +16,7 @@ import '../../core/connectivity_service.dart';
 import '../../core/socket_service.dart';
 import '../../core/local_notification_service.dart';
 import '../../core/mesh_service.dart';
+import '../../core/tinyml_sensor_service.dart';
 import '../assignments/assignments_tab.dart';
 import '../coordinator/coordinator_dashboard_tab.dart';
 import '../coordinator/coordinator_operations_tab.dart';
@@ -51,6 +52,7 @@ class _AuthGateState extends State<AuthGate> {
     LocalNotificationService.instance.initialize();
     MeshService.instance.initForegroundService();
     MeshService.instance.startRadarScanner();
+    TinyMLSensorService.instance.startMonitoring();
     _bootstrap();
   }
 
