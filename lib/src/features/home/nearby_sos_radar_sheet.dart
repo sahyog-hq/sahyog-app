@@ -41,7 +41,7 @@ class _NearbySosRadarSheetState extends State<NearbySosRadarSheet>
   @override
   void dispose() {
     _waveController.dispose();
-    MeshService.instance.stopRadarScanner();
+    // Background mesh listening remains active so phone receives SOS push notifications when locked
     super.dispose();
   }
 

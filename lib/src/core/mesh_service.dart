@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:nearby_connections/nearby_connections.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:http/http.dart' as http;
 import 'app_config.dart';
 import 'socket_service.dart';
+import 'local_notification_service.dart';
 
 class MeshService {
   static final MeshService instance = MeshService._internal();
@@ -23,6 +25,38 @@ class MeshService {
   
   // Track known endpoints to prevent infinite reconnect loops
   final Set<String> _knownEndpoints = {};
+
+  Future<void> initForegroundService() async {
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: 'sahyog_mesh_service_v2',
+        channelName: 'Sahyog Mesh Network',
+        channelDescription: 'Active background service for emergency BLE mesh communication',
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(),
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(5000),
+        autoRunOnBoot: false,
+        allowWakeLock: true,
+        allowWifiLock: true,
+      ),
+    );
+  }
+
+  Future<void> _startForegroundTask() async {
+    try {
+      if (await FlutterForegroundTask.isRunningService) return;
+      await FlutterForegroundTask.startService(
+        serviceId: 256,
+        notificationTitle: 'Sahyog Mesh Network Active',
+        notificationText: 'Listening for nearby emergency SOS signals in the background',
+      );
+    } catch (e) {
+      debugPrint('[MeshService] Failed to start foreground task: $e');
+    }
+  }
 
   Future<bool> requestPermissions() async {
     Map<Permission, PermissionStatus> statuses = await [
@@ -151,6 +185,8 @@ class MeshService {
     bool hasPermissions = await requestPermissions();
     if (!hasPermissions) return;
 
+    await _startForegroundTask();
+
     try {
       isScanning = true;
       await Nearby().startDiscovery(
@@ -246,6 +282,14 @@ class MeshService {
       );
       currentAlerts[uuid] = data;
       SocketService.instance.liveSosAlerts.value = currentAlerts;
+
+      // Show a local notification so the user sees the alert even when backgrounded
+      final sosType = data['type'] ?? 'Emergency';
+      LocalNotificationService.instance.showMeshSosNotification(
+        title: '🚨 SOS Nearby (BLE Mesh)',
+        body: '$sosType alert detected ${hopCount > 0 ? '(${hopCount} hops away)' : 'nearby'}. Tap to view on radar.',
+        payload: uuid,
+      );
 
       final connectivityResult = await Connectivity().checkConnectivity();
       bool hasInternet = !connectivityResult.contains(ConnectivityResult.none);

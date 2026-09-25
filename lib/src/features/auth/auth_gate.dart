@@ -14,6 +14,8 @@ import '../../core/models.dart';
 import '../../theme/app_colors.dart';
 import '../../core/connectivity_service.dart';
 import '../../core/socket_service.dart';
+import '../../core/local_notification_service.dart';
+import '../../core/mesh_service.dart';
 import '../assignments/assignments_tab.dart';
 import '../coordinator/coordinator_dashboard_tab.dart';
 import '../coordinator/coordinator_operations_tab.dart';
@@ -46,6 +48,9 @@ class _AuthGateState extends State<AuthGate> {
     super.initState();
     _api = ApiClient(baseUrl: AppConfig.baseUrl, tokenProvider: _tokenProvider);
     SocketService.instance.initialize();
+    LocalNotificationService.instance.initialize();
+    MeshService.instance.initForegroundService();
+    MeshService.instance.startRadarScanner();
     _bootstrap();
   }
 

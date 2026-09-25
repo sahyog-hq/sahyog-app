@@ -32,9 +32,13 @@
 		<true/>
 	</dict>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Sahyog uses location for volunteer disaster coordination and SOS support.</string>
+	<string>Sahyog shares your location continuously while on duty so coordinators can track volunteer deployments.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Sahyog needs your location to send SOS and display nearby incident data.</string>
+	<string>Sahyog needs your location to dispatch the nearest responders to your SOS alert.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Sahyog uses Bluetooth to relay SOS alerts between nearby phones when internet is unavailable.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Sahyog uses Bluetooth to broadcast your SOS signal to nearby volunteers when offline.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

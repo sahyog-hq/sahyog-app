@@ -17,7 +17,7 @@ class AppConfig {
   static const localDevelopmentUrl = 'http://$localWifiIp:$port';
   
   // Production Deployed URL
-  static const productionUrl = 'https://sahyog-wq9v.onrender.com';
+  static const productionUrl = 'https://sahyog-cxq3.onrender.com';
 
   static String get baseUrl {
     String url = _envBaseUrl;
