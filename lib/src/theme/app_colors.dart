@@ -9,9 +9,13 @@ class AppColors {
   static const warningAmber = Color(0xFFF39C12);
   static const infoBlue = Color(0xFF3498DB);
 
-  static const darkCard = Color(0xFF1C2329);
-  static const darkBorder = Color(0xFF7A8490);
-  static const darkMutedText = Color(0xFFC5CDD4);
+  /// Matches web `[data-theme="dark"]` in `index.css`.
+  static const darkBg = Color(0xFF171717);
+  static const darkCard = Color(0xFF1E1E1E);
+  static const darkBorder = Color(0xFF2E2E2E);
+  static const darkMutedText = Color(0xFFA1A1AA);
+  static const darkText = Color(0xFFEDEDED);
+  static const darkPrimary = Color(0xFF3ECF8E);
 
   static bool isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;

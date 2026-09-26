@@ -92,20 +92,20 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.primaryGreen,
+      seedColor: AppColors.darkPrimary,
       brightness: Brightness.dark,
-      primary: AppColors.primaryGreen,
-      surface: AppColors.neutralDark,
-      onSurface: AppColors.neutralLight,
+      primary: AppColors.darkPrimary,
+      surface: AppColors.darkCard,
+      onSurface: AppColors.darkText,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: const Color(0xFF12171C),
+      scaffoldBackgroundColor: AppColors.darkBg,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF12171C),
-        foregroundColor: AppColors.neutralLight,
+        backgroundColor: AppColors.darkBg,
+        foregroundColor: AppColors.darkText,
         elevation: 0,
         scrolledUnderElevation: 0,
         shape: Border(bottom: BorderSide(color: AppColors.darkBorder, width: 0.5)),
@@ -119,12 +119,19 @@ class AppTheme {
           side: const BorderSide(color: AppColors.darkBorder),
         ),
       ),
-
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.darkCard,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: AppColors.darkCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         height: 65,
-        backgroundColor: const Color(0xFF12171C),
+        backgroundColor: AppColors.darkBg,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: AppColors.primaryGreen.withValues(alpha: 0.15),
+        indicatorColor: AppColors.darkPrimary.withValues(alpha: 0.15),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       inputDecorationTheme: InputDecorationTheme(

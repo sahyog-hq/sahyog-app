@@ -8,7 +8,6 @@ import '../../core/location_service.dart';
 import '../../core/models.dart';
 import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
-import '../home/tinyml_control_card.dart';
 import 'language_switcher.dart';
 import 'theme_switcher.dart';
 
@@ -290,10 +289,6 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           const SizedBox(height: 16),
         ],
-
-        // TinyML Sensor Safeguard Card (available for Team Leads, Volunteers & Citizens)
-        TinyMLControlCard(api: widget.api),
-        const SizedBox(height: 16),
 
         // Health & Contact Card (Available for all roles)
         Card(

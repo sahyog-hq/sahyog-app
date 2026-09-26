@@ -44,10 +44,21 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _recentTasks = [];
   List<Map<String, dynamic>> _recentSos = [];
   Timer? _pollTimer;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  String _searchQuery = '';
+  bool _isSearchExpanded = false;
 
   @override
   void initState() {
     super.initState();
+    _searchFocusNode.addListener(() {
+      if (_searchFocusNode.hasFocus) {
+        setState(() => _isSearchExpanded = true);
+      } else if (_searchController.text.isEmpty) {
+        setState(() => _isSearchExpanded = false);
+      }
+    });
     _load();
     _pollTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (mounted) _load(silent: true);
@@ -57,6 +68,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -156,7 +169,17 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Column(
+    return GestureDetector(
+      onTap: () {
+        if (_searchFocusNode.hasFocus) {
+          _searchFocusNode.unfocus();
+          if (_searchController.text.isEmpty) {
+            setState(() => _isSearchExpanded = false);
+          }
+        }
+      },
+      behavior: HitTestBehavior.translucent,
+      child: Column(
       children: [
         if (_loading) const LinearProgressIndicator(minHeight: 2),
         Expanded(
@@ -171,34 +194,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       _error,
                       style: const TextStyle(color: AppColors.criticalRed),
                     ),
-                  GestureDetector(
-                    onTap: () {
-                      widget.onNavigate?.call(1);
-                    },
-                    child: Container(
-                      height: 208,
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: AppColors.card(context),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.border(context),
-                          width: 1.0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _buildMiniMap(),
-                      ),
-                    ),
-                  ),
+                  _buildSearchAndMap(),
                   _buildStatsRow(),
                   const SizedBox(height: 12),
                   EmergencySosBox(
@@ -324,6 +320,206 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
         ),
+      ],
+    ),
+    );
+  }
+
+  Widget _buildSearchAndMap() {
+    final initial = widget.user.name.isNotEmpty
+        ? widget.user.name[0].toUpperCase()
+        : 'V';
+    return SizedBox(
+      height: 246,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: 66,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onTap: () => widget.onNavigate?.call(1),
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: AppColors.card(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border(context)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: _buildMiniMap(),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              height: _isSearchExpanded ? 246 : 56,
+              decoration: BoxDecoration(
+                color: AppColors.card(context),
+                borderRadius: BorderRadius.circular(_isSearchExpanded ? 20 : 32),
+                border: Border.all(
+                  color: _isSearchExpanded
+                      ? AppColors.primaryGreen.withValues(alpha: 0.6)
+                      : AppColors.border(context),
+                ),
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 52,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.15),
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                color: AppColors.primaryGreen,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              onChanged: (val) => setState(() => _searchQuery = val),
+                              decoration: const InputDecoration(
+                                hintText: 'Search alerts, tasks...',
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(vertical: 8),
+                              ),
+                            ),
+                          ),
+                          if (_isSearchExpanded || _searchController.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 20, color: Colors.grey),
+                              onPressed: () {
+                                _searchController.clear();
+                                _searchFocusNode.unfocus();
+                                setState(() {
+                                  _searchQuery = '';
+                                  _isSearchExpanded = false;
+                                });
+                              },
+                            )
+                          else
+                            const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Icon(Icons.search, color: Colors.grey),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_isSearchExpanded) ...[
+                    Divider(height: 1, color: AppColors.border(context)),
+                    Expanded(child: _buildVolunteerSearchResults()),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVolunteerSearchResults() {
+    final query = _searchQuery.trim().toLowerCase();
+    final matchingSos = _recentSos.where((s) {
+      final name = (s['reporter_name'] ?? s['name'] ?? '').toString().toLowerCase();
+      final type = (s['type'] ?? '').toString().toLowerCase();
+      return query.isEmpty || name.contains(query) || type.contains(query);
+    }).toList();
+    final matchingTasks = _recentTasks.where((t) {
+      final title = (t['title'] ?? t['description'] ?? '').toString().toLowerCase();
+      return query.isEmpty || title.contains(query);
+    }).toList();
+
+    if (query.isEmpty) {
+      return const Center(
+        child: Text(
+          'Search alerts or relief tasks',
+          style: TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+      );
+    }
+    if (matchingSos.isEmpty && matchingTasks.isEmpty) {
+      return const Center(
+        child: Text(
+          'No matching alerts or tasks',
+          style: TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      children: [
+        if (matchingSos.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.fromLTRB(8, 6, 8, 4),
+            child: Text(
+              'SOS ALERTS',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppColors.criticalRed,
+              ),
+            ),
+          ),
+          ...matchingSos.map(
+            (sos) => ListTile(
+              dense: true,
+              leading: const Icon(Icons.sos, color: AppColors.criticalRed),
+              title: Text(
+                (sos['reporter_name'] ?? sos['type'] ?? 'SOS').toString(),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              onTap: () => widget.onNavigate?.call(2),
+            ),
+          ),
+        ],
+        if (matchingTasks.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.fromLTRB(8, 6, 8, 4),
+            child: Text(
+              'TASKS',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primaryGreen,
+              ),
+            ),
+          ),
+          ...matchingTasks.map(
+            (task) => ListTile(
+              dense: true,
+              leading: const Icon(Icons.assignment_outlined, color: AppColors.primaryGreen),
+              title: Text(
+                (task['title'] ?? task['type'] ?? 'Task').toString(),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              onTap: () => widget.onNavigate?.call(3),
+            ),
+          ),
+        ],
       ],
     );
   }
