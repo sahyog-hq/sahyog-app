@@ -157,7 +157,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
         SosLog.event(incident.uuid, 'IMMEDIATE_SYNC_ATTEMPT');
         await SosSyncEngine.instance.syncAll();
 
-        MeshService.instance.startBroadcastingSOS({
+        final payload = {
           'uuid': incident.uuid,
           'type': incident.type,
           'lat': pos?.latitude,
@@ -166,23 +166,29 @@ class EmergencySosBoxState extends State<EmergencySosBox>
           'reporter_name': widget.user.name,
           'reporter_phone': widget.user.phone,
           'hop_count': 0,
-        });
+        };
 
         final updated = await db.getIncidentByUuid(incident.uuid);
+        final sentToServer = updated != null &&
+            updated.status == SosStatus.activeOnline &&
+            (updated.backendId ?? '').isNotEmpty;
+
         if (!mounted) return;
-        if (updated != null && updated.status == SosStatus.activeOnline) {
+        if (sentToServer) {
+          MeshService.instance.stopBroadcasting();
           setState(() => _activeSosId = updated.backendId);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('SOS Activated! Broadcasting to Web & BLE Mesh...'),
+              content: Text('SOS sent to server.'),
               backgroundColor: AppColors.criticalRed,
               duration: Duration(seconds: 3),
             ),
           );
         } else {
+          await MeshService.instance.startBroadcastingSOS(payload);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Offline! Broadcasting SOS via BLE Mesh...'),
+              content: Text('Not on server — broadcasting SOS over BLE.'),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 4),
             ),
@@ -689,7 +695,11 @@ class EmergencySosBoxState extends State<EmergencySosBox>
               if (event.pointer != _activePointer) return;
               _cancelHold();
             },
-            child: AnimatedSize(
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.all(_sosHoldTicks >= 5 ? 8 : 0),
+              child: AnimatedSize(
               duration: const Duration(milliseconds: 280),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
@@ -840,34 +850,31 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                     ),
                     if (_sosHoldTicks >= 5) ...[
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
                         child: Column(
                           children: [
                             Text(
                               'Keep holding — slide to ${_selectedDisaster}',
                               style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.black54,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const NeverScrollableScrollPhysics(),
-                              child: Row(
-                                children: [
-                                  for (final type in _disasterTypes) ...[
-                                    _DisasterHoldChip(
-                                      key: _chipKeys[type.value],
-                                      label: type.label,
-                                      icon: type.icon,
-                                      selected: _selectedDisaster == type.value,
-                                    ),
-                                    const SizedBox(width: 6),
-                                  ],
-                                ],
-                              ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.center,
+                              children: [
+                                for (final type in _disasterTypes)
+                                  _DisasterHoldChip(
+                                    key: _chipKeys[type.value],
+                                    label: type.label,
+                                    icon: type.icon,
+                                    selected: _selectedDisaster == type.value,
+                                  ),
+                              ],
                             ),
                           ],
                         ),
@@ -876,6 +883,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                   ],
                 ),
               ),
+            ),
             ),
           ),
         ],
@@ -900,30 +908,35 @@ class _DisasterHoldChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      width: 72,
+      height: 72,
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: selected
             ? AppColors.criticalRed
             : AppColors.criticalRed.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.criticalRed.withValues(alpha: selected ? 1 : 0.25),
+          color: AppColors.criticalRed.withValues(alpha: selected ? 1 : 0.3),
+          width: selected ? 2 : 1,
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,
-            size: 16,
+            size: 26,
             color: selected ? Colors.white : AppColors.criticalRed,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(height: 4),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
               color: selected ? Colors.white : AppColors.criticalRed,
             ),
           ),
