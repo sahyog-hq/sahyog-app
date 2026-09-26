@@ -49,6 +49,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
   String? _activeLocalUuid;
   String _selectedDisaster = 'Emergency';
   int? _activePointer;
+  ScrollHoldController? _scrollHold;
 
   static const _disasterTypes = <({String value, IconData icon})>[
     (value: 'Flood', icon: Icons.flood_outlined),
@@ -80,6 +81,13 @@ class EmergencySosBoxState extends State<EmergencySosBox>
   void initState() {
     super.initState();
     _checkActiveSOS();
+  }
+
+  @override
+  void dispose() {
+    _sosHoldTimer?.cancel();
+    _unlockParentScroll();
+    super.dispose();
   }
 
   Future<void> _checkActiveSOS() async {
@@ -144,7 +152,8 @@ class EmergencySosBoxState extends State<EmergencySosBox>
           reporterId: widget.user.id,
           lat: pos?.latitude,
           lng: pos?.longitude,
-          type: anomalyType ?? 'Emergency',
+          // Disaster-type chips are UI-only for now; server still gets Emergency.
+          type: 'Emergency',
           status: SosStatus.activating,
         );
 
@@ -172,7 +181,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
 
         final payload = {
           'uuid': incident.uuid,
-          'type': incident.type,
+          'type': 'Emergency',
           'lat': pos?.latitude,
           'lng': pos?.longitude,
           'reporter_id': widget.user.id,
@@ -322,9 +331,20 @@ class EmergencySosBoxState extends State<EmergencySosBox>
     }
   }
 
+  void _lockParentScroll() {
+    _scrollHold?.cancel();
+    _scrollHold = Scrollable.maybeOf(context)?.position.hold(() {});
+  }
+
+  void _unlockParentScroll() {
+    _scrollHold?.cancel();
+    _scrollHold = null;
+  }
+
   void _cancelHold() {
     _sosHoldTimer?.cancel();
     _activePointer = null;
+    _unlockParentScroll();
     if (mounted) {
       setState(() {
         _sosHoldTicks = 0;
@@ -337,6 +357,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
     if (_sosFired || _sending || TinyMLSensorService.instance.alertOpen) {
       return;
     }
+    _lockParentScroll();
     _sosHoldTicks = 0;
     _selectedDisaster = 'Emergency';
     _sosHoldTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -346,7 +367,9 @@ class EmergencySosBoxState extends State<EmergencySosBox>
         if (_sosHoldTicks >= 50) {
           _sosHoldTimer?.cancel();
           _sosFired = true;
-          triggerSOS(anomalyType: _selectedDisaster);
+          _unlockParentScroll();
+          // Type is selected in the UI only; server payload stays Emergency.
+          triggerSOS();
         }
       });
     });
@@ -685,6 +708,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
           ),
         ] else ...[
           Listener(
+            behavior: HitTestBehavior.opaque,
             onPointerDown: (event) {
               if (_activePointer != null) return;
               _activePointer = event.pointer;
