@@ -7,6 +7,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:http/http.dart' as http;
 import 'app_config.dart';
+import 'ble_distress_hub.dart';
 import 'socket_service.dart';
 import 'local_notification_service.dart';
 
@@ -82,6 +83,15 @@ class MeshService {
 
   /// Called by the victim when offline to start sending distress signals
   Future<void> startBroadcastingSOS(Map<String, dynamic> payload) async {
+    final uuid = payload['uuid']?.toString() ?? '';
+    if (uuid.isNotEmpty) {
+      await BleDistressHub.instance.broadcastSos(
+        uuid: uuid,
+        lat: (payload['lat'] as num?)?.toDouble(),
+        lng: (payload['lng'] as num?)?.toDouble(),
+        type: payload['type']?.toString(),
+      );
+    }
     if (!isSupported || isBroadcasting) return;
     
     bool hasPermissions = await requestPermissions();
@@ -128,6 +138,7 @@ class MeshService {
   }
 
   void stopBroadcasting() {
+    BleDistressHub.instance.stopBroadcast();
     if (!isSupported) {
       isBroadcasting = false;
       return;
@@ -190,6 +201,8 @@ class MeshService {
 
   /// Called by the Mesh Radar UI to discover nearby SOS signals
   Future<void> startRadarScanner() async {
+    await BleDistressHub.instance.startListening();
+    await BleDistressHub.instance.restorePersistedBroadcast();
     if (!isSupported || isScanning) return;
     
     bool hasPermissions = await requestPermissions();

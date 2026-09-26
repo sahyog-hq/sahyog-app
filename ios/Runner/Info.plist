@@ -45,6 +45,12 @@
 	<string>Sahyog uses Bluetooth to relay SOS alerts between nearby phones when internet is unavailable.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Sahyog uses Bluetooth to broadcast your SOS signal to nearby volunteers when offline.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+		<string>location</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

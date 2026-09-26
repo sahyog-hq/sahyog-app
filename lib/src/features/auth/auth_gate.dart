@@ -53,6 +53,7 @@ class _AuthGateState extends State<AuthGate> {
     LocalNotificationService.instance.initialize();
     MeshService.instance.initForegroundService();
     MeshService.instance.startRadarScanner();
+    // BLE advertisements keep transmitting a stored SOS with no internet.
     TinyMLSensorService.instance.startMonitoring();
     _bootstrap();
   }
