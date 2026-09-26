@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
+import '../../core/app_permissions.dart';
 import '../../core/models.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
@@ -58,7 +59,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Future<void> _uploadProof() async {
-    final picked = await ImagePicker().pickImage(
+    final picked = await AppPermissions.pickImage(
       source: ImageSource.camera,
       imageQuality: 70,
     );

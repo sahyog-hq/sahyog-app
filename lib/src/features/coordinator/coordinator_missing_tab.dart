@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_permissions.dart';
 import '../../core/location_service.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
@@ -94,7 +95,6 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
   Future<void> _markFound(String id) async {
     String condition = 'found_safe';
     XFile? pickedFile;
-    final picker = ImagePicker();
 
     _foundNoteCtrl.clear();
     _foundLocCtrl.clear();
@@ -130,7 +130,7 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
                     Center(
                       child: GestureDetector(
                         onTap: () async {
-                          final file = await picker.pickImage(
+                          final file = await AppPermissions.pickImage(
                             source: ImageSource.gallery,
                             imageQuality: 70,
                           );
@@ -394,8 +394,7 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
                     Center(
                       child: GestureDetector(
                         onTap: () async {
-                          final picker = ImagePicker();
-                          final file = await picker.pickImage(
+                          final file = await AppPermissions.pickImage(
                             source: ImageSource.gallery,
                             imageQuality: 70,
                           );

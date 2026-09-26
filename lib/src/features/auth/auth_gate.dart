@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import '../../core/api_client.dart';
 import '../../core/app_config.dart';
+import '../../core/app_permissions.dart';
 import '../../core/models.dart';
 import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -77,6 +78,7 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<void> _bootstrap() async {
     try {
+      unawaited(AppPermissions.requestLaunchPermissions());
       final prefs = await SharedPreferences.getInstance();
       final cachedStr = prefs.getString('cached_user');
 

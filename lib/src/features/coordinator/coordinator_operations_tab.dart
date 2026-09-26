@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_permissions.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/expandable_record_card.dart';
@@ -736,7 +737,7 @@ class _CoordinatorOperationsTabState extends State<CoordinatorOperationsTab>
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
-                        final file = await ImagePicker().pickImage(
+                        final file = await AppPermissions.pickImage(
                           source: ImageSource.gallery,
                           imageQuality: 70,
                         );

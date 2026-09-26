@@ -41,6 +41,14 @@
 	<string>Sahyog shares your location continuously while on duty so coordinators can track volunteer deployments.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Sahyog needs your location to dispatch the nearest responders to your SOS alert.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Sahyog uses the camera to attach photos to missing-person reports and task proof.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Sahyog needs photo access so you can upload images for missing-person reports and tasks.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Sahyog may save report photos to your library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sahyog may use the microphone when capturing a report video or photo.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Sahyog uses Bluetooth to relay SOS alerts between nearby phones when internet is unavailable.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
