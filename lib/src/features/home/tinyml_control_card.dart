@@ -171,16 +171,6 @@ class _TinyMLControlCardState extends State<TinyMLControlCard> {
                 ],
               ),
               const SizedBox(height: 14),
-              Text(
-                'TEST ANOMALY DETECTORS:',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
