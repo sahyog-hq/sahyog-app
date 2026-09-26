@@ -55,6 +55,8 @@ class AppUser {
   bool get isOrganization => role == 'organization';
   bool get isUser => role == 'user';
 
+  bool get isVehicle => role == 'vehicle';
+
   factory AppUser.fromSync(Map<String, dynamic> json) {
     return AppUser(
       id: (json['id'] ?? '').toString(),
@@ -129,6 +131,7 @@ String normalizeRole(String rawRole) {
     'org:admin': 'admin',
     'org:organization': 'organization',
     'user': 'user',
+    'vehicle': 'vehicle',
   };
 
   return roleMap[rawRole] ??

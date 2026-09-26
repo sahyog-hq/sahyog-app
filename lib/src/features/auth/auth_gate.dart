@@ -25,6 +25,7 @@ import '../coordinator/coordinator_operations_tab.dart';
 import '../coordinator/combined_sos_tab.dart';
 import '../home/home_tab.dart';
 import '../home/user_home_tab.dart';
+import '../fleet/driver_app_shell.dart';
 import '../map/map_tab.dart';
 import '../missing/missing_tab.dart';
 import '../notifications/notifications_tab.dart';
@@ -206,6 +207,9 @@ class RoleBasedAppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (user.isVehicle) {
+      return DriverAppShell(api: api, user: user);
+    }
     if (user.isCoordinator) {
       return CoordinatorAppShell(api: api, user: user);
     }
