@@ -35,7 +35,7 @@ class _MapTabState extends State<MapTab> with AutomaticKeepAliveClientMixin {
   double _currentZoom = 12.0;
 
   bool _isMapReady = false;
-  bool _isLegendExpanded = true;
+  bool _isLegendExpanded = false;
 
   @override
   void initState() {
