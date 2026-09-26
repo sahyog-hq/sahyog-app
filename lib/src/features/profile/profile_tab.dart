@@ -10,6 +10,7 @@ import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../home/tinyml_control_card.dart';
 import 'language_switcher.dart';
+import 'theme_switcher.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key, required this.api, required this.user});
@@ -367,6 +368,8 @@ class _ProfileTabState extends State<ProfileTab> {
 
         const SizedBox(height: 16),
         const LanguageSwitcher(),
+        const SizedBox(height: 16),
+        const ThemeSwitcher(),
         const SizedBox(height: 16),
 
         Card(

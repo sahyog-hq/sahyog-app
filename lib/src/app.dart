@@ -7,6 +7,7 @@ import 'package:sahyog_app/src/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/language_provider.dart';
+import 'core/theme_provider.dart';
 import 'features/auth/auth_gate.dart';
 import 'package:sahyog_app/l10n/app_localizations.dart';
 
@@ -24,6 +25,7 @@ class SahyogApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final language = LanguageScope.of(context);
+    final themeProvider = ThemeScope.of(context);
     return ClerkAuth(
       config: ClerkAuthConfig(
         publishableKey: clerkPublishableKey,
@@ -50,8 +52,9 @@ class SahyogApp extends StatelessWidget {
         navigatorKey: navigatorKey,
         scaffoldMessengerKey: scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
-        themeMode: ThemeMode.light,
+        themeMode: themeProvider.themeMode,
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
         home: ClerkAuthBuilder(
           signedOutBuilder: (_, __) => const _SignedOutScreen(),
           signedInBuilder: (_, authState) => AuthGate(authState: authState),
