@@ -68,6 +68,30 @@ class _AuthGateState extends State<AuthGate> {
     super.dispose();
   }
 
+  bool _isClerkDriver(dynamic clerkUser) {
+    if (clerkUser == null) return false;
+    bool matches(String? raw) {
+      final role = raw?.toLowerCase() ?? '';
+      return role == 'vehicle' ||
+          role == 'driver' ||
+          role == 'org:driver' ||
+          role.contains('driver') ||
+          role.contains('vehicle');
+    }
+
+    if (matches(clerkUser.publicMetadata?['role']?.toString())) return true;
+    if (matches(clerkUser.unsafeMetadata?['role']?.toString())) return true;
+    final memberships = clerkUser.organizationMemberships;
+    if (memberships is List) {
+      for (final m in memberships) {
+        if (matches(m?.role?.toString()) || matches(m?.roleName?.toString())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   Future<String?> _tokenProvider() async {
     try {
       final clerk.SessionToken token = await widget.authState.sessionToken();
@@ -81,9 +105,11 @@ class _AuthGateState extends State<AuthGate> {
     try {
       unawaited(AppPermissions.requestLaunchPermissions());
       final prefs = await SharedPreferences.getInstance();
+      final clerkId = widget.authState.user?.id;
+      final cachedClerkId = prefs.getString('cached_clerk_user_id');
       final cachedStr = prefs.getString('cached_user');
 
-      if (cachedStr != null) {
+      if (cachedStr != null && cachedClerkId != null && cachedClerkId == clerkId) {
         try {
           final cachedUser = AppUser.fromJson(jsonDecode(cachedStr));
           setState(() {
@@ -93,6 +119,7 @@ class _AuthGateState extends State<AuthGate> {
         } catch (_) {}
       } else {
         setState(() {
+          _user = null;
           _loading = true;
           _error = '';
         });
@@ -121,14 +148,15 @@ class _AuthGateState extends State<AuthGate> {
 
       try {
         final clerkUser = widget.authState.user;
-        final meta = clerkUser?.publicMetadata;
-        final metaRole = meta == null
-            ? null
-            : Map<String, dynamic>.from(meta as Map)['role']?.toString();
-        if (metaRole == 'vehicle' ||
-            metaRole == 'driver' ||
-            metaRole == 'org:driver') {
+        if (_isClerkDriver(clerkUser)) {
           user = user.copyWith(role: 'vehicle');
+        }
+        final emails = clerkUser?.emailAddresses;
+        final clerkEmail = (emails != null && emails.isNotEmpty)
+            ? emails.first.emailAddress
+            : null;
+        if (clerkEmail != null && clerkEmail.isNotEmpty) {
+          user = user.copyWith(email: clerkEmail);
         }
       } catch (_) {}
 
@@ -145,6 +173,9 @@ class _AuthGateState extends State<AuthGate> {
 
       // Save to cache
       await prefs.setString('cached_user', jsonEncode(user.toJson()));
+      if (clerkId != null) {
+        await prefs.setString('cached_clerk_user_id', clerkId);
+      }
 
       setState(() {
         _user = user;
