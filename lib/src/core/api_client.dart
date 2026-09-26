@@ -30,7 +30,9 @@ class ApiClient {
   }) async {
     final uri = Uri.parse('$baseUrl$path').replace(queryParameters: query);
     final headers = await _headers(withAuth: withAuth);
-    final response = await http.get(uri, headers: headers);
+    final response = await http
+        .get(uri, headers: headers)
+        .timeout(const Duration(seconds: 12));
     return _decode(response);
   }
 
@@ -41,11 +43,13 @@ class ApiClient {
   }) async {
     final uri = Uri.parse('$baseUrl$path');
     final headers = await _headers(withAuth: withAuth);
-    final response = await http.post(
-      uri,
-      headers: headers,
-      body: body == null ? null : jsonEncode(body),
-    );
+    final response = await http
+        .post(
+          uri,
+          headers: headers,
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 12));
     return _decode(response);
   }
 

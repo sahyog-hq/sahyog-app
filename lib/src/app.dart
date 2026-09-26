@@ -32,7 +32,6 @@ class SahyogApp extends StatelessWidget {
         defaultLaunchMode: LaunchMode.externalApplication,
       ),
       child: MaterialApp(
-        key: ValueKey('locale-${language.locale.languageCode}'),
         title: 'Sahyog',
         locale: language.locale,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -57,7 +56,10 @@ class SahyogApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         home: ClerkAuthBuilder(
           signedOutBuilder: (_, __) => const _SignedOutScreen(),
-          signedInBuilder: (_, authState) => AuthGate(authState: authState),
+          signedInBuilder: (_, authState) => AuthGate(
+            key: ValueKey(authState.user?.id ?? 'signed-in'),
+            authState: authState,
+          ),
         ),
       ),
     );

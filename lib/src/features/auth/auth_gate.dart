@@ -47,16 +47,14 @@ class _AuthGateState extends State<AuthGate> {
   AppUser? _user;
   late final ApiClient _api;
 
+  bool _bootstrapping = false;
+
   @override
   void initState() {
     super.initState();
     _api = ApiClient(baseUrl: AppConfig.baseUrl, tokenProvider: _tokenProvider);
     SocketService.instance.initialize();
     LocalNotificationService.instance.initialize();
-    MeshService.instance.initForegroundService();
-    MeshService.instance.startRadarScanner();
-    // BLE advertisements keep transmitting a stored SOS with no internet.
-    TinyMLSensorService.instance.startMonitoring();
     _bootstrap();
   }
 
@@ -101,9 +99,28 @@ class _AuthGateState extends State<AuthGate> {
     }
   }
 
+  AppUser _userFromClerk() {
+    final clerkUser = widget.authState.user;
+    final emails = clerkUser?.emailAddresses;
+    final email = (emails != null && emails.isNotEmpty)
+        ? emails.first.emailAddress
+        : '';
+    final name = [
+      clerkUser?.firstName,
+      clerkUser?.lastName,
+    ].whereType<String>().where((s) => s.isNotEmpty).join(' ');
+    return AppUser(
+      id: clerkUser?.id ?? 'local',
+      name: name.isNotEmpty ? name : 'User',
+      email: email,
+      role: _isClerkDriver(clerkUser) ? 'vehicle' : 'volunteer',
+    );
+  }
+
   Future<void> _bootstrap() async {
+    if (_bootstrapping) return;
+    _bootstrapping = true;
     try {
-      unawaited(AppPermissions.requestLaunchPermissions());
       final prefs = await SharedPreferences.getInstance();
       final clerkId = widget.authState.user?.id;
       final cachedClerkId = prefs.getString('cached_clerk_user_id');
@@ -180,25 +197,37 @@ class _AuthGateState extends State<AuthGate> {
       setState(() {
         _user = user;
         _loading = false;
+        _error = '';
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(AppPermissions.requestLaunchPermissions());
+        MeshService.instance.initForegroundService();
+        MeshService.instance.startRadarScanner();
+        TinyMLSensorService.instance.startMonitoring();
       });
     } on SocketException catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Server Unreachable - Please check your connection.';
+        _user = _userFromClerk();
+        _error = '';
         _loading = false;
       });
     } on TimeoutException catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Connection Timed Out - Server Unreachable.';
+        _user = _userFromClerk();
+        _error = '';
         _loading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _user = _userFromClerk();
+        _error = '';
         _loading = false;
       });
+    } finally {
+      _bootstrapping = false;
     }
   }
 
