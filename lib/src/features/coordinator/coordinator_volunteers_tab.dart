@@ -20,6 +20,8 @@ class _CoordinatorVolunteersTabState extends State<CoordinatorVolunteersTab> {
   bool _loading = true;
   String _error = '';
   Timer? _pollTimer;
+  String _searchQuery = '';
+  final TextEditingController _searchCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _CoordinatorVolunteersTabState extends State<CoordinatorVolunteersTab> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -68,6 +71,14 @@ class _CoordinatorVolunteersTabState extends State<CoordinatorVolunteersTab> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
 
+    final filteredVolunteers = _volunteers.where((v) {
+      if (_searchQuery.isEmpty) return true;
+      final query = _searchQuery.toLowerCase();
+      final name = (v['full_name'] ?? '').toString().toLowerCase();
+      final email = (v['email'] ?? '').toString().toLowerCase();
+      return name.contains(query) || email.contains(query);
+    }).toList();
+
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
@@ -83,12 +94,34 @@ class _CoordinatorVolunteersTabState extends State<CoordinatorVolunteersTab> {
           const Text(
             'Live activity and assignment signal for all volunteers in operation.',
           ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _searchCtrl,
+            onChanged: (val) => setState(() => _searchQuery = val),
+            decoration: InputDecoration(
+              hintText: 'Search volunteers...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+          ),
           if (_error.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(_error, style: const TextStyle(color: AppColors.criticalRed)),
           ],
           const SizedBox(height: 12),
-          if (_volunteers.isEmpty)
+          if (filteredVolunteers.isEmpty)
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(14),
@@ -96,7 +129,7 @@ class _CoordinatorVolunteersTabState extends State<CoordinatorVolunteersTab> {
               ),
             )
           else
-            ..._volunteers.map((v) {
+            ...filteredVolunteers.map((v) {
               final name = (v['full_name'] ?? 'Unnamed').toString();
               final email = (v['email'] ?? '').toString();
               final active = v['is_active'] == true;

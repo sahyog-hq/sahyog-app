@@ -8,6 +8,7 @@ import '../../core/location_service.dart';
 import '../../core/models.dart';
 import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
+import '../home/tinyml_control_card.dart';
 import 'language_switcher.dart';
 
 class ProfileTab extends StatefulWidget {
@@ -25,6 +26,19 @@ class _ProfileTabState extends State<ProfileTab> {
   bool _busy = false;
   bool _availability = true;
   Timer? _locationTimer;
+
+  String _getLocalizedRole(AppUser user, AppLocalizations l10n) {
+    if (user.isUser) return l10n.citizen;
+    if (user.isVolunteer) return l10n.volunteer;
+    if (user.isCoordinator) return l10n.coordinator;
+    final r = user.role.trim().toLowerCase();
+    if (r == 'citizen' || r == 'user') return l10n.citizen;
+    if (r == 'volunteer') return l10n.volunteer;
+    if (r == 'coordinator' || r == 'team_lead' || r == 'teamlead' || r == 'lead' || r == 'admin') {
+      return l10n.coordinator;
+    }
+    return user.role;
+  }
 
   Future<void> _updateUserDetails() async {
     try {
@@ -148,11 +162,11 @@ class _ProfileTabState extends State<ProfileTab> {
     final theme = Theme.of(context);
     final isVolunteer = widget.user.isVolunteer;
     final l10n = AppLocalizations.of(context);
+    final roleText = _getLocalizedRole(widget.user, l10n).toUpperCase();
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // ... (ClerkAuthBuilder remains same)
         ClerkAuthBuilder(
           signedInBuilder: (context, authState) {
             final clerkUser = authState.user;
@@ -206,8 +220,7 @@ class _ProfileTabState extends State<ProfileTab> {
                               .withValues(alpha: 0.1),
                       side: BorderSide.none,
                       label: Text(
-                        (widget.user.isUser ? l10n.citizen : widget.user.role)
-                            .toUpperCase(),
+                        roleText,
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
@@ -227,83 +240,8 @@ class _ProfileTabState extends State<ProfileTab> {
 
         const SizedBox(height: 16),
 
-        if (widget.user.isUser) ...[
-          // Health & Contact Card for Citizen
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.grey.shade200),
-            ),
-            child: Theme(
-              data: Theme.of(
-                context,
-              ).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                initiallyExpanded: false,
-                leading: const Icon(
-                  Icons.health_and_safety,
-                  color: AppColors.primaryGreen,
-                ),
-                title: Text(
-                  l10n.healthContactDetails,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  l10n.healthContactSubtitle,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Divider(),
-                        const SizedBox(height: 12),
-                        _buildProfileField(
-                          label: l10n.bloodGroup,
-                          controller: _bloodCtrl,
-                          icon: Icons.bloodtype,
-                          hint: l10n.bloodGroupHint,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildProfileField(
-                          label: l10n.address,
-                          controller: _addrCtrl,
-                          icon: Icons.home,
-                          hint: l10n.addressHint,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildProfileField(
-                          label: l10n.medicalHistory,
-                          controller: _medCtrl,
-                          icon: Icons.medical_services,
-                          hint: l10n.medicalHistoryHint,
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _busy ? null : _updateUserDetails,
-                            icon: const Icon(Icons.save, size: 18),
-                            label: Text(l10n.saveDetails),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-
-        const SizedBox(height: 16),
-
-        if (isVolunteer)
+        // Volunteer availability & location sync section
+        if (isVolunteer) ...[
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -348,19 +286,84 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
               ],
             ),
-          )
-        else if (!widget.user.isUser)
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.grey.shade200),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(l10n.availabilityVolunteerOnly),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        // TinyML Sensor Safeguard Card (available for Team Leads, Volunteers & Citizens)
+        TinyMLControlCard(api: widget.api),
+        const SizedBox(height: 16),
+
+        // Health & Contact Card (Available for all roles)
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+          child: Theme(
+            data: Theme.of(
+              context,
+            ).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              leading: const Icon(
+                Icons.health_and_safety,
+                color: AppColors.primaryGreen,
+              ),
+              title: Text(
+                l10n.healthContactDetails,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                l10n.healthContactSubtitle,
+                style: const TextStyle(fontSize: 12),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      _buildProfileField(
+                        label: l10n.bloodGroup,
+                        controller: _bloodCtrl,
+                        icon: Icons.bloodtype,
+                        hint: l10n.bloodGroupHint,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildProfileField(
+                        label: l10n.address,
+                        controller: _addrCtrl,
+                        icon: Icons.home,
+                        hint: l10n.addressHint,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildProfileField(
+                        label: l10n.medicalHistory,
+                        controller: _medCtrl,
+                        icon: Icons.medical_services,
+                        hint: l10n.medicalHistoryHint,
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _busy ? null : _updateUserDetails,
+                          icon: const Icon(Icons.save, size: 18),
+                          label: Text(l10n.saveDetails),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
+        ),
 
         const SizedBox(height: 16),
         const LanguageSwitcher(),
