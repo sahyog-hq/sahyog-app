@@ -7,6 +7,8 @@ import '../../core/api_client.dart';
 import '../../core/location_service.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/expandable_record_card.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 
 class MissingTab extends StatefulWidget {
   const MissingTab({super.key, required this.api});
@@ -576,84 +578,40 @@ class _MissingTabState extends State<MissingTab>
       itemCount: _board.length,
       itemBuilder: (context, index) {
         final item = _board[index] as Map<String, dynamic>;
+        final l10n = AppLocalizations.of(context);
         final status = (item['status'] ?? 'missing').toString();
-        final name = (item['name'] ?? 'Unnamed').toString();
+        final name = (item['name'] ?? l10n.unnamed).toString();
         final desc = item['description']?.toString() ?? '';
-        final imageUrl = firstNetworkImage(item['photo_urls']);
+        final phone = (item['reporter_phone'] ?? '').toString();
+        final isFound = status == 'found';
+        final statusLabel = isFound ? l10n.found : l10n.statusMissing;
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                imageUrl == null
-                    ? CircleAvatar(
-                        radius: 28,
-                        backgroundColor: status == 'found'
-                            ? AppColors.primaryGreen.withValues(alpha: 0.15)
-                            : AppColors.criticalRed.withValues(alpha: 0.15),
-                        child: Icon(
-                          status == 'found'
-                              ? Icons.verified
-                              : Icons.person_search,
-                          size: 28,
-                          color: status == 'found'
-                              ? AppColors.primaryGreen
-                              : AppColors.criticalRed,
-                        ),
-                      )
-                    : RemoteReportImage(
-                        url: imageUrl,
-                        size: 56,
-                        icon: Icons.person_search,
-                      ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Age: ${item['age'] ?? 'Unknown'} • Status: ${status.toUpperCase()}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      if (desc.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          desc,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ],
+        return ExpandableRecordCard(
+          title: name,
+          subtitle:
+              '${l10n.ageLabel}: ${item['age'] ?? l10n.unknown} • ${l10n.statusLabel}: $statusLabel',
+          imageUrls: networkImageUrls(item['photo_urls']),
+          placeholderIcon: isFound ? Icons.verified : Icons.person_search,
+          accentColor:
+              isFound ? AppColors.primaryGreen : AppColors.criticalRed,
+          trailing: isFound
+              ? Chip(label: Text(l10n.found))
+              : IconButton(
+                  onPressed: () => _markFound((item['id'] ?? '').toString()),
+                  icon: const Icon(
+                    Icons.check_circle_outline,
+                    color: AppColors.primaryGreen,
                   ),
+                  tooltip: 'Mark Found',
                 ),
-                if (status == 'found')
-                  const Chip(label: Text('FOUND'))
-                else
-                  IconButton(
-                    onPressed: () => _markFound((item['id'] ?? '').toString()),
-                    icon: const Icon(
-                      Icons.check_circle_outline,
-                      color: AppColors.primaryGreen,
-                    ),
-                    tooltip: 'Mark Found',
-                  ),
-              ],
+          details: [
+            DetailRow(label: l10n.description, value: desc),
+            DetailRow(label: l10n.reporterPhone, value: phone),
+            DetailRow(
+              label: l10n.lastSeen,
+              value: formatLastSeen(item['last_seen_location']),
             ),
-          ),
+          ],
         );
       },
     );

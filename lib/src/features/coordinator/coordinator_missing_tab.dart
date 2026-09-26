@@ -8,6 +8,8 @@ import '../../core/api_client.dart';
 import '../../core/location_service.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/expandable_record_card.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 
 /// Coordinator Missing Persons — single tab (no report form).
 /// Shows all missing persons with sorting and Mark Found.
@@ -577,69 +579,41 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
       itemCount: _board.length,
       itemBuilder: (context, index) {
         final item = _board[index];
+        final l10n = AppLocalizations.of(context);
         final status = (item['status'] ?? 'missing').toString();
-        final name = (item['name'] ?? 'Unnamed').toString();
-        final age = item['age']?.toString() ?? 'Unknown';
+        final name = (item['name'] ?? l10n.unnamed).toString();
+        final age = item['age']?.toString() ?? l10n.unknown;
         final id = (item['id'] ?? '').toString();
         final isFound = status == 'found';
         final phone = (item['reporter_phone'] ?? '').toString();
-        final imageUrl = firstNetworkImage(item['photo_urls']);
+        final desc = (item['description'] ?? '').toString();
+        final statusLabel = isFound ? l10n.found : l10n.statusMissing;
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                imageUrl == null
-                    ? CircleAvatar(
-                        backgroundColor: isFound
-                            ? AppColors.primaryGreen.withValues(alpha: 0.15)
-                            : AppColors.criticalRed.withValues(alpha: 0.15),
-                        child: Icon(
-                          isFound ? Icons.verified : Icons.person_search,
-                          color: isFound
-                              ? AppColors.primaryGreen
-                              : AppColors.criticalRed,
-                        ),
-                      )
-                    : RemoteReportImage(
-                        url: imageUrl,
-                        icon: Icons.person_search,
-                      ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        'Age: $age • Phone: $phone',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      Text(
-                        'Status: ${status.toUpperCase()}',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    ],
-                  ),
+        return ExpandableRecordCard(
+          title: name,
+          subtitle: '${l10n.ageLabel}: $age • ${l10n.statusLabel}: $statusLabel',
+          imageUrls: networkImageUrls(item['photo_urls']),
+          placeholderIcon: isFound ? Icons.verified : Icons.person_search,
+          accentColor:
+              isFound ? AppColors.primaryGreen : AppColors.criticalRed,
+          trailing: !isFound && id.isNotEmpty
+              ? FilledButton.tonal(
+                  onPressed: () => _markFound(id),
+                  child: Text(l10n.found, style: const TextStyle(fontSize: 12)),
+                )
+              : Chip(
+                  label: Text(l10n.found, style: const TextStyle(fontSize: 10)),
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
                 ),
-                if (!isFound && id.isNotEmpty)
-                  FilledButton.tonal(
-                    onPressed: () => _markFound(id),
-                    child: const Text('Found', style: TextStyle(fontSize: 12)),
-                  )
-                else if (isFound)
-                  const Chip(
-                    label: Text('FOUND', style: TextStyle(fontSize: 10)),
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-              ],
+          details: [
+            DetailRow(label: l10n.description, value: desc),
+            DetailRow(label: l10n.reporterPhone, value: phone),
+            DetailRow(
+              label: l10n.lastSeen,
+              value: formatLastSeen(item['last_seen_location']),
             ),
-          ),
+          ],
         );
       },
     );

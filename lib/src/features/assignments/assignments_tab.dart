@@ -6,6 +6,8 @@ import '../../core/api_client.dart';
 import '../../core/models.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/expandable_record_card.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 import 'task_detail_screen.dart';
 
 class AssignmentsTab extends StatefulWidget {
@@ -324,124 +326,96 @@ class _AssignmentsTabState extends State<AssignmentsTab> {
           )
         else
           ..._pendingTasks.map((task) {
+            final l10n = AppLocalizations.of(context);
             final status = (task['status'] ?? 'pending').toString();
             final volunteerId = task['volunteer_id'];
             final isUnassigned = volunteerId == null;
+            final desc = (task['description'] ?? '').toString();
+            final title = (task['title'] ?? task['type'] ?? l10n.tasks).toString();
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: Padding(
-                padding: const EdgeInsets.all(0),
-                child: Column(
-                  children: [
-                    ListTile(
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TaskDetailScreen(
-                              api: widget.api,
-                              user: widget.user,
-                              task: task,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ExpandableRecordCard(
+                title: title,
+                subtitle: isUnassigned
+                    ? l10n.unassigned
+                    : '${l10n.statusLabel}: $status',
+                imageUrls: networkImageUrls(task['proof_images']),
+                placeholderIcon:
+                    isUnassigned ? Icons.assignment : Icons.assignment_ind,
+                accentColor:
+                    isUnassigned ? Colors.orange : AppColors.primaryGreen,
+                trailing: (!isUnassigned && status == 'accepted')
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.check_circle_outline,
+                          color: AppColors.primaryGreen,
+                        ),
+                        tooltip: 'Mark as Done',
+                        onPressed: () => _updateTaskStatus(
+                          (task['id'] ?? '').toString(),
+                          'completed',
+                        ),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.open_in_new),
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TaskDetailScreen(
+                                api: widget.api,
+                                user: widget.user,
+                                task: task,
+                              ),
                             ),
+                          );
+                          _load(silent: true);
+                        },
+                      ),
+                details: [
+                  DetailRow(label: l10n.description, value: desc),
+                  DetailRow(
+                    label: l10n.assignedTo,
+                    value: isUnassigned
+                        ? l10n.unassigned
+                        : (task['volunteer_name'] ?? '').toString(),
+                  ),
+                  if (!isUnassigned &&
+                      (status == 'pending' || status == 'assigned'))
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => _updateTaskStatus(
+                              (task['id'] ?? '').toString(),
+                              'rejected',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.criticalRed,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            child: const Text('Decline'),
                           ),
-                        );
-                        _load(silent: true);
-                      },
-                      leading: firstNetworkImage(task['proof_images']) != null
-                          ? RemoteReportImage(
-                              url: firstNetworkImage(task['proof_images']),
-                              size: 40,
-                              icon: Icons.assignment,
-                            )
-                          : CircleAvatar(
-                        backgroundColor: isUnassigned
-                            ? Colors.orange.withValues(alpha: 0.1)
-                            : AppColors.primaryGreen.withValues(alpha: 0.1),
-                        child: Icon(
-                          isUnassigned
-                              ? Icons.assignment
-                              : Icons.assignment_ind,
-                          color: isUnassigned
-                              ? Colors.orange
-                              : AppColors.primaryGreen,
                         ),
-                      ),
-                      title: Text(
-                        (task['title'] ?? task['type'] ?? 'Task').toString(),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Text(
-                        isUnassigned
-                            ? 'Unassigned • Click to Accept'
-                            : 'Status: $status',
-                        style: TextStyle(
-                          color: isUnassigned ? Colors.orange[800] : null,
-                          fontWeight: isUnassigned ? FontWeight.bold : null,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FilledButton.tonal(
+                            onPressed: () => _updateTaskStatus(
+                              (task['id'] ?? '').toString(),
+                              'accepted',
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primaryGreen,
+                              foregroundColor: Colors.white,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            child: const Text('Accept'),
+                          ),
                         ),
-                      ),
-                      trailing: (!isUnassigned && status == 'accepted')
-                          ? IconButton(
-                              icon: const Icon(
-                                Icons.check_circle_outline,
-                                color: AppColors.primaryGreen,
-                              ),
-                              tooltip: 'Mark as Done',
-                              onPressed: () => _updateTaskStatus(
-                                (task['id'] ?? '').toString(),
-                                'completed',
-                              ),
-                            )
-                          : const Icon(Icons.chevron_right),
+                      ],
                     ),
-                    if (!isUnassigned &&
-                        (status == 'pending' || status == 'assigned'))
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          left: 72,
-                          right: 16,
-                          bottom: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => _updateTaskStatus(
-                                  (task['id'] ?? '').toString(),
-                                  'rejected',
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.criticalRed,
-                                  side: BorderSide(
-                                    color: AppColors.criticalRed.withOpacity(
-                                      0.5,
-                                    ),
-                                  ),
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                child: const Text('Decline'),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: FilledButton.tonal(
-                                onPressed: () => _updateTaskStatus(
-                                  (task['id'] ?? '').toString(),
-                                  'accepted',
-                                ),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.primaryGreen,
-                                  foregroundColor: Colors.white,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                child: const Text('Accept'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+                ],
               ),
             );
           }),

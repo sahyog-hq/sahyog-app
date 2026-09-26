@@ -311,7 +311,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           const SizedBox(height: 8),
           RemoteReportImage(
             url: firstNetworkImage(_task['proof_images']),
-            size: 160,
+            width: double.infinity,
+            height: 220,
+            circular: false,
             icon: Icons.photo_outlined,
           ),
         ],

@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/expandable_record_card.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 
 /// Operations tab: Volunteers / Tasks / Needs as segmented top tabs.
 class CoordinatorOperationsTab extends StatefulWidget {
@@ -881,95 +883,48 @@ class _CoordinatorOperationsTabState extends State<CoordinatorOperationsTab>
   }
 
   Widget _buildTaskCard(Map<String, dynamic> task) {
+    final l10n = AppLocalizations.of(context);
     final id = (task['id'] ?? '').toString();
     final status = (task['status'] ?? 'pending').toString();
-    final volunteerName = (task['volunteer_name'] ?? 'Unassigned').toString();
+    final volunteerName = (task['volunteer_name'] ?? l10n.unassigned).toString();
     final desc = (task['description'] ?? '').toString();
+    final title = (task['title'] ?? task['type'] ?? l10n.tasks).toString();
 
-    return Card(
-      child: InkWell(
-        onTap: () => _openTaskDetails(task),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      (task['title'] ?? task['type'] ?? 'Task').toString(),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  _StatusLabel(status: status),
-                ],
+    return ExpandableRecordCard(
+      title: title,
+      subtitle: '${l10n.assignedTo}: $volunteerName • ${l10n.statusLabel}: $status',
+      imageUrls: networkImageUrls(task['proof_images']),
+      placeholderIcon: Icons.assignment_outlined,
+      trailing: _StatusLabel(status: status),
+      details: [
+        DetailRow(label: l10n.description, value: desc),
+        DetailRow(label: l10n.assignedTo, value: volunteerName),
+        Row(
+          children: [
+            TextButton.icon(
+              onPressed: () => _openVolunteerPanel(
+                onSingleSelect: (v) => _reassignTask(id, v['id'].toString()),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.person_pin_circle_outlined,
-                    size: 14,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Assigned to: $volunteerName',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
+              icon: const Icon(Icons.swap_horiz, size: 16),
+              label: const Text('Quick Reassign', style: TextStyle(fontSize: 12)),
+            ),
+            const Spacer(),
+            IconButton(
+              onPressed: id.isEmpty ? null : () => _deleteTask(id),
+              icon: const Icon(
+                Icons.delete_outline,
+                color: AppColors.criticalRed,
+                size: 20,
               ),
-              if (desc.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    desc,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, height: 1.4),
-                  ),
-                ),
-              if (firstNetworkImage(task['proof_images']) != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: RemoteReportImage(
-                    url: firstNetworkImage(task['proof_images']),
-                    size: 72,
-                    icon: Icons.photo_outlined,
-                  ),
-                ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: () => _openVolunteerPanel(
-                      onSingleSelect: (v) =>
-                          _reassignTask(id, v['id'].toString()),
-                    ),
-                    icon: const Icon(Icons.swap_horiz, size: 16),
-                    label: const Text(
-                      'Quick Reassign',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: id.isEmpty ? null : () => _deleteTask(id),
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: AppColors.criticalRed,
-                      size: 20,
-                    ),
-                    tooltip: 'Delete',
-                  ),
-                ],
-              ),
-            ],
-          ),
+              tooltip: 'Delete',
+            ),
+            IconButton(
+              onPressed: () => _openTaskDetails(task),
+              icon: const Icon(Icons.open_in_new, size: 20),
+            ),
+          ],
         ),
-      ),
+      ],
     );
   }
 
