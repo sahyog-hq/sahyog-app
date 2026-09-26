@@ -184,76 +184,79 @@ class _UserHomeTabState extends State<UserHomeTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _UserStatusBanner(user: widget.user),
-                  const SizedBox(height: 16),
-                  Container(
-                    height: 228,
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        width: 1.0,
+    return Column(
+      children: [
+        if (_loading) const LinearProgressIndicator(minHeight: 2),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _UserStatusBanner(user: widget.user),
+                const SizedBox(height: 16),
+                Container(
+                  height: 228,
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      width: 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: _buildMiniMap(),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  TinyMLControlCard(
-                api: widget.api,
-                onAutoSosTriggered: (type, desc) {
-                   _sosBoxKey.currentState?.triggerSOS(anomalyType: type);
-                },
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.emergency_share_outlined,
-                    color: AppColors.criticalRed,
-                    size: 20,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _buildMiniMap(),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Recent Disaster Alerts',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (_alerts.isEmpty)
-                _EmptyAlertsState()
-              else
-                ..._alerts.map(
-                  (alert) => _AlertCard(alert: alert, api: widget.api),
                 ),
-              const SizedBox(height: 32),
-                ],
-              ),
+                const SizedBox(height: 16),
+                TinyMLControlCard(
+                  api: widget.api,
+                  onAutoSosTriggered: (type, desc) {
+                    _sosBoxKey.currentState?.triggerSOS(anomalyType: type);
+                  },
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.emergency_share_outlined,
+                      color: AppColors.criticalRed,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Recent Disaster Alerts',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (_alerts.isEmpty)
+                  _EmptyAlertsState()
+                else
+                  ..._alerts.map(
+                    (alert) => _AlertCard(alert: alert, api: widget.api),
+                  ),
+                const SizedBox(height: 16),
+              ],
             ),
-      bottomNavigationBar: _sosBar(),
+          ),
+        ),
+        _sosBar(),
+      ],
     );
   }
 

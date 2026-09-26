@@ -156,12 +156,11 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          if (_loading) const LinearProgressIndicator(minHeight: 2),
-          Expanded(
-            child: RefreshIndicator(
+    return Column(
+      children: [
+        if (_loading) const LinearProgressIndicator(minHeight: 2),
+        Expanded(
+          child: RefreshIndicator(
               onRefresh: _load,
               child: ListView(
                 padding: const EdgeInsets.all(16),
@@ -294,40 +293,39 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       ),
                     );
                   }),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
               ],
             ),
           ),
         ),
-        ],
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: EmergencySosBox(
-          key: _sosBoxKey,
-          user: widget.user,
-          api: widget.api,
-          onSosTap: () {
-            final alerts = SocketService.instance.liveSosAlerts.value;
-            if (alerts.isEmpty) return;
-            DatabaseHelper.instance.getActiveIncident(widget.user.id).then((
-              active,
-            ) {
-              if (!context.mounted) return;
-              SosAlertsPanel.show(
-                context: context,
-                alerts: alerts,
-                activeLocalUuid: active?.uuid,
-                onCancelSos: null,
-                onGoToSosPanels: () => widget.onNavigate?.call(3),
-                onNavigateToLocation: (loc) =>
-                    widget.onNavigate?.call(1, target: loc),
-              );
-            });
-          },
-          onSosLocationTap: (ll) => widget.onNavigate?.call(1, target: ll),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: EmergencySosBox(
+            key: _sosBoxKey,
+            user: widget.user,
+            api: widget.api,
+            onSosTap: () {
+              final alerts = SocketService.instance.liveSosAlerts.value;
+              if (alerts.isEmpty) return;
+              DatabaseHelper.instance.getActiveIncident(widget.user.id).then((
+                active,
+              ) {
+                if (!context.mounted) return;
+                SosAlertsPanel.show(
+                  context: context,
+                  alerts: alerts,
+                  activeLocalUuid: active?.uuid,
+                  onCancelSos: null,
+                  onGoToSosPanels: () => widget.onNavigate?.call(3),
+                  onNavigateToLocation: (loc) =>
+                      widget.onNavigate?.call(1, target: loc),
+                );
+              });
+            },
+            onSosLocationTap: (ll) => widget.onNavigate?.call(1, target: ll),
+          ),
         ),
-      ),
+      ],
     );
   }
 

@@ -364,6 +364,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
     final double progress = (_sosHoldTicks / 50.0).clamp(0.0, 1.0);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (_activeSosId != null || _sosFired) ...[
           Container(

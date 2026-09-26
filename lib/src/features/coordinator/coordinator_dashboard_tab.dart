@@ -159,31 +159,31 @@ class _CoordinatorDashboardTabState extends State<CoordinatorDashboardTab> {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: EmergencySosBox(
+                user: widget.user,
+                api: widget.api,
+                onSosTap: () {
+                  final alerts = SocketService.instance.liveSosAlerts.value;
+                  if (alerts.isEmpty) return;
+                  DatabaseHelper.instance
+                      .getActiveIncident(widget.user.id)
+                      .then((active) {
+                    if (!context.mounted) return;
+                    SosAlertsPanel.show(
+                      context: context,
+                      alerts: alerts,
+                      activeLocalUuid: active?.uuid,
+                      onCancelSos: null,
+                      onGoToSosPanels: () => widget.onNavigate(3),
+                    );
+                  });
+                },
+                onSosLocationTap: (ll) => widget.onNavigate(3, target: ll),
+              ),
+            ),
           ],
-        ),
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: EmergencySosBox(
-            user: widget.user,
-            api: widget.api,
-            onSosTap: () {
-              final alerts = SocketService.instance.liveSosAlerts.value;
-              if (alerts.isEmpty) return;
-              DatabaseHelper.instance.getActiveIncident(widget.user.id).then((
-                active,
-              ) {
-                if (!context.mounted) return;
-                SosAlertsPanel.show(
-                  context: context,
-                  alerts: alerts,
-                  activeLocalUuid: active?.uuid,
-                  onCancelSos: null,
-                  onGoToSosPanels: () => widget.onNavigate(3),
-                );
-              });
-            },
-            onSosLocationTap: (ll) => widget.onNavigate(3, target: ll),
-          ),
         ),
       ),
     );
