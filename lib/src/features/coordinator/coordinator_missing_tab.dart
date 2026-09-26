@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 import '../../core/location_service.dart';
+import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 
 /// Coordinator Missing Persons — single tab (no report form).
@@ -232,13 +233,22 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
                         onPressed: () async {
                           Navigator.pop(ctx);
                           try {
+                            final closePhoto = pickedFile;
+                            final photos = closePhoto == null
+                                ? <String>[]
+                                : await widget.api.uploadImages(
+                                    [closePhoto.path],
+                                    folder: 'missing',
+                                  );
                             await widget.api.patch(
                               '/api/v1/coordinator/missing/$id/found',
                               body: {
                                 'description': _foundNoteCtrl.text.trim(),
                                 'condition': condition,
                                 'rescue_location': _foundLocCtrl.text.trim(),
-                                'rescue_photo': pickedFile?.path ?? '',
+                                'rescue_photo': photos.isEmpty
+                                    ? ''
+                                    : photos.first,
                               },
                             );
                             if (!mounted) return;
@@ -297,11 +307,17 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
 
     setState(() => _submitting = true);
     try {
+      final photoUrls = _pickedPhoto == null
+          ? <String>[]
+          : await widget.api.uploadImages(
+              [_pickedPhoto!.path],
+              folder: 'missing',
+            );
       final body = <String, dynamic>{
         'reporter_phone': phone,
         'name': _nameCtrl.text.trim().isEmpty ? null : _nameCtrl.text.trim(),
         'age': int.tryParse(_ageCtrl.text.trim()),
-        'photo_urls': _pickedPhoto == null ? [] : [_pickedPhoto!.path],
+        'photo_urls': photoUrls,
         'description': 'Reported by Coordinator.',
       };
 
@@ -567,23 +583,29 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
         final id = (item['id'] ?? '').toString();
         final isFound = status == 'found';
         final phone = (item['reporter_phone'] ?? '').toString();
+        final imageUrl = firstNetworkImage(item['photo_urls']);
 
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: isFound
-                      ? AppColors.primaryGreen.withValues(alpha: 0.15)
-                      : AppColors.criticalRed.withValues(alpha: 0.15),
-                  child: Icon(
-                    isFound ? Icons.verified : Icons.person_search,
-                    color: isFound
-                        ? AppColors.primaryGreen
-                        : AppColors.criticalRed,
-                  ),
-                ),
+                imageUrl == null
+                    ? CircleAvatar(
+                        backgroundColor: isFound
+                            ? AppColors.primaryGreen.withValues(alpha: 0.15)
+                            : AppColors.criticalRed.withValues(alpha: 0.15),
+                        child: Icon(
+                          isFound ? Icons.verified : Icons.person_search,
+                          color: isFound
+                              ? AppColors.primaryGreen
+                              : AppColors.criticalRed,
+                        ),
+                      )
+                    : RemoteReportImage(
+                        url: imageUrl,
+                        icon: Icons.person_search,
+                      ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

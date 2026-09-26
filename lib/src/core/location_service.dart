@@ -25,25 +25,43 @@ class LocationService {
     );
   }
 
-  /// Opens turn-by-turn navigation in native Google Maps or Apple Maps
+  /// Opens turn-by-turn navigation in native Google Maps or Apple Maps.
   static Future<bool> openDirections(double latitude, double longitude, {String? label}) async {
-    final Uri googleMapsUrl = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude',
-    );
+    final encodedLabel = Uri.encodeComponent(label ?? 'SOS');
 
     try {
       if (!kIsWeb && Platform.isIOS) {
-        final Uri appleMapsUrl = Uri.parse(
-          'https://maps.apple.com/?daddr=$latitude,$longitude${label != null ? '&q=${Uri.encodeComponent(label)}' : ''}',
+        final appleMapsUrl = Uri.parse(
+          'https://maps.apple.com/?daddr=$latitude,$longitude&dirflg=d&q=$encodedLabel',
         );
         if (await canLaunchUrl(appleMapsUrl)) {
           return await launchUrl(appleMapsUrl, mode: LaunchMode.externalApplication);
         }
       }
 
-      if (await canLaunchUrl(googleMapsUrl)) {
-        return await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+      if (!kIsWeb && Platform.isAndroid) {
+        // google.navigation opens the Maps app already in directions mode.
+        // canLaunchUrl returns false on Android 11+ unless every scheme is
+        // declared, so try the intents directly.
+        final navigationUrl = Uri.parse(
+          'google.navigation:q=$latitude,$longitude&mode=d',
+        );
+        if (await launchUrl(navigationUrl, mode: LaunchMode.externalApplication)) {
+          return true;
+        }
+
+        final geoUrl = Uri.parse(
+          'geo:$latitude,$longitude?q=$latitude,$longitude($encodedLabel)',
+        );
+        if (await launchUrl(geoUrl, mode: LaunchMode.externalApplication)) {
+          return true;
+        }
       }
+
+      final googleMapsUrl = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving',
+      );
+      return await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
     } catch (_) {}
     return false;
   }

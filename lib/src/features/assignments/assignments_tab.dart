@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 import '../../core/models.dart';
+import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 import 'task_detail_screen.dart';
 
@@ -347,7 +348,13 @@ class _AssignmentsTabState extends State<AssignmentsTab> {
                         );
                         _load(silent: true);
                       },
-                      leading: CircleAvatar(
+                      leading: firstNetworkImage(task['proof_images']) != null
+                          ? RemoteReportImage(
+                              url: firstNetworkImage(task['proof_images']),
+                              size: 40,
+                              icon: Icons.assignment,
+                            )
+                          : CircleAvatar(
                         backgroundColor: isUnassigned
                             ? Colors.orange.withValues(alpha: 0.1)
                             : AppColors.primaryGreen.withValues(alpha: 0.1),

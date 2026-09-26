@@ -271,7 +271,7 @@ class _UserAppShellState extends State<UserAppShell> {
 
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 24,
+        titleSpacing: 16,
         title: Row(
           children: [
             ClipRRect(
@@ -282,19 +282,20 @@ class _UserAppShellState extends State<UserAppShell> {
                 height: 28,
               ),
             ),
-            const SizedBox(width: 12),
-            Flexible(
-              fit: FlexFit.loose,
+            const SizedBox(width: 10),
+            Expanded(
               child: Text(
                 _titles[_index],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(width: 8),
-            const _RoleChip(label: 'CITIZEN', color: Colors.orange),
           ],
         ),
         actions: [
+          const _RoleChip(label: 'CITIZEN', color: Colors.orange),
+          const SizedBox(width: 4),
           _RefreshControl(
             onRefresh: () {
               setState(() => _refreshNotifier.value++);
@@ -407,7 +408,7 @@ class _GeneralAppShellState extends State<GeneralAppShell> {
 
     final scaffold = Scaffold(
       appBar: AppBar(
-        titleSpacing: 24,
+        titleSpacing: 16,
         title: Row(
           children: [
             ClipRRect(
@@ -418,19 +419,20 @@ class _GeneralAppShellState extends State<GeneralAppShell> {
                 height: 28,
               ),
             ),
-            const SizedBox(width: 12),
-            Flexible(
-              fit: FlexFit.loose,
+            const SizedBox(width: 10),
+            Expanded(
               child: Text(
                 _titles[_index],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(width: 8),
-            const _RoleChip(label: 'VOLUNTEER', color: AppColors.primaryGreen),
           ],
         ),
         actions: [
+          const _RoleChip(label: 'VOLUNTEER', color: AppColors.primaryGreen),
+          const SizedBox(width: 4),
           _RefreshControl(
             onRefresh: () {
               setState(() => _refreshNotifier.value++);
@@ -568,7 +570,7 @@ class _CoordinatorAppShellState extends State<CoordinatorAppShell> {
 
     final scaffold = Scaffold(
       appBar: AppBar(
-        titleSpacing: 24, // spacing horizontally for header
+        titleSpacing: 16,
         title: Row(
           children: [
             ClipRRect(
@@ -579,19 +581,20 @@ class _CoordinatorAppShellState extends State<CoordinatorAppShell> {
                 height: 28,
               ),
             ),
-            const SizedBox(width: 12),
-            Flexible(
-              fit: FlexFit.loose,
+            const SizedBox(width: 10),
+            Expanded(
               child: Text(
                 _titles[_index],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(width: 8),
-            const _RoleChip(label: 'TEAM LEAD', color: AppColors.infoBlue),
           ],
         ),
         actions: [
+          const _RoleChip(label: 'TEAM LEAD', color: AppColors.infoBlue),
+          const SizedBox(width: 4),
           _RefreshControl(
             onRefresh: () {
               setState(() => _refreshNotifier.value++);

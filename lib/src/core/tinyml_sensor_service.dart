@@ -54,8 +54,16 @@ class TinyMLSensorService {
   DateTime? _lastShakeTime;
   int _shakeCount = 0;
   DateTime? _lastTriggerTime; // Cooldown timer to prevent alert spamming
+  bool _alertOpen = false;
 
   bool get isEnabled => _isEnabled;
+  bool get alertOpen => _alertOpen;
+
+  /// Call when the countdown dialog closes so another alert can be considered.
+  void finishAlert() {
+    _alertOpen = false;
+    _lastTriggerTime = DateTime.now();
+  }
   TinyMLSensitivity get sensitivity => _sensitivity;
 
   void setEnabled(bool enabled) {
@@ -109,27 +117,30 @@ class TinyMLSensorService {
 
     if (_window.length < 5) return;
 
-    // Cooldown check (5 seconds between triggers)
+    // One countdown at a time. A second motion spike must not open another timer.
+    if (_alertOpen) return;
+
+    final quietSeconds = _sensitivity == TinyMLSensitivity.testing ? 8 : 30;
     if (_lastTriggerTime != null &&
-        DateTime.now().difference(_lastTriggerTime!).inSeconds < 5) {
+        DateTime.now().difference(_lastTriggerTime!).inSeconds < quietSeconds) {
       return;
     }
 
-    // Thresholds based on selected mode
+    // Testing thresholds stay easy to demo. Production needs a clearly harder hit.
     final isTesting = _sensitivity == TinyMLSensitivity.testing;
-    
-    final double freefallLowThreshold = isTesting ? 4.5 : 2.5;
-    final double impactThreshold = isTesting ? 12.0 : 20.0;
-    final double crashThreshold = isTesting ? 14.0 : 25.0;
-    final double stillnessVarianceThreshold = isTesting ? 0.4 : 0.2;
-    final int immobilitySeconds = isTesting ? 5 : 12;
+
+    final double freefallLowThreshold = isTesting ? 4.5 : 1.5;
+    final double impactThreshold = isTesting ? 12.0 : 32.0;
+    final double crashThreshold = isTesting ? 14.0 : 40.0;
+    final double stillnessVarianceThreshold = isTesting ? 0.4 : 0.08;
+    final int immobilitySeconds = isTesting ? 5 : 20;
 
     // ----------------------------------------------------
     // 1. Freefall + Impact (Phone dropping or building collapse)
     // ----------------------------------------------------
     int consecutiveLowG = 0;
     bool hadFreefall = false;
-    final int requiredFreefallSamples = isTesting ? 3 : 5;
+    final int requiredFreefallSamples = isTesting ? 3 : 8;
     
     // Check all values in the window except the very latest ones which might be the impact
     final int checkLength = max(0, _window.length - 2);
@@ -158,7 +169,7 @@ class TinyMLSensorService {
     // ----------------------------------------------------
     // 2. Panic Shake Gesture
     // ----------------------------------------------------
-    final shakeThreshold = isTesting ? 12.0 : 16.0;
+    final shakeThreshold = isTesting ? 12.0 : 24.0;
     if (g > shakeThreshold) {
       final now = DateTime.now();
       if (_lastShakeTime == null || now.difference(_lastShakeTime!).inMilliseconds > 1500) {
@@ -169,7 +180,7 @@ class TinyMLSensorService {
       }
       _lastShakeTime = now;
 
-      if (_shakeCount >= (isTesting ? 3 : 4)) {
+      if (_shakeCount >= (isTesting ? 3 : 6)) {
         _shakeCount = 0;
         _triggerAnomaly(AnomalyEvent(
           type: AnomalyType.panicShake,
@@ -230,11 +241,11 @@ class TinyMLSensorService {
   }
 
   void _triggerAnomaly(AnomalyEvent event) {
+    if (_alertOpen || onAnomalyDetected == null) return;
+    _alertOpen = true;
     _lastTriggerTime = DateTime.now();
     debugPrint('[TinyML ANOMALY TRIGGERED] ${event.title}: ${event.description}');
-    if (onAnomalyDetected != null) {
-      onAnomalyDetected!(event);
-    }
+    onAnomalyDetected!(event);
   }
 
   /// Helper method for manual testing trigger

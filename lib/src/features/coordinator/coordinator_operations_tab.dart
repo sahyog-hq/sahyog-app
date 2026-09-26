@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
+import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 
 /// Operations tab: Volunteers / Tasks / Needs as segmented top tabs.
@@ -272,13 +273,19 @@ class _CoordinatorOperationsTabState extends State<CoordinatorOperationsTab>
     }
     try {
       setState(() => _creating = true);
+      final proofImages = _taskImage == null
+          ? <String>[]
+          : await widget.api.uploadImages(
+              [_taskImage!.path],
+              folder: 'tasks',
+            );
       Map<String, dynamic> baseBody = {
         'title': _titleCtrl.text.trim(),
         'type': finalType.trim(),
         'description': _descCtrl.text.trim().isEmpty
             ? null
             : _descCtrl.text.trim(),
-        'photo_path': _taskImage?.path ?? '',
+        'proof_images': proofImages,
         'status': 'in_progress', // Default to started as requested
       };
 
@@ -922,6 +929,15 @@ class _CoordinatorOperationsTabState extends State<CoordinatorOperationsTab>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12, height: 1.4),
+                  ),
+                ),
+              if (firstNetworkImage(task['proof_images']) != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: RemoteReportImage(
+                    url: firstNetworkImage(task['proof_images']),
+                    size: 72,
+                    icon: Icons.photo_outlined,
                   ),
                 ),
               const SizedBox(height: 12),

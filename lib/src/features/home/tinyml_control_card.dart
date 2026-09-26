@@ -29,14 +29,17 @@ class _TinyMLControlCardState extends State<TinyMLControlCard> {
     _sensitivity = TinyMLSensorService.instance.sensitivity;
 
     // Listen for anomaly events to automatically display modal
-    TinyMLSensorService.instance.onAnomalyDetected = (event) {
-      if (mounted) {
-        TinyMLEmergencyDialog.show(
+    TinyMLSensorService.instance.onAnomalyDetected = (event) async {
+      try {
+        if (!mounted) return;
+        await TinyMLEmergencyDialog.show(
           context,
           event,
           api: widget.api,
           onAutoSosTriggered: widget.onAutoSosTriggered,
         );
+      } finally {
+        TinyMLSensorService.instance.finishAlert();
       }
     };
   }

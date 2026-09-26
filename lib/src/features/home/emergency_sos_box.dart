@@ -14,6 +14,7 @@ import 'package:latlong2/latlong.dart';
 import 'nearby_sos_radar_sheet.dart';
 import 'sos_alerts_panel.dart';
 import '../../core/mesh_service.dart';
+import '../../core/tinyml_sensor_service.dart';
 
 class EmergencySosBox extends StatefulWidget {
   const EmergencySosBox({
@@ -67,9 +68,15 @@ class EmergencySosBoxState extends State<EmergencySosBox>
   // SOS Activation — State Machine Driven
   // ─────────────────────────────────────────────────────────
 
+  static bool _sending = false;
+
   Future<void> triggerSOS({String? anomalyType, String? anomalyDesc}) async {
+    if (_sending || _sosFired) return;
+    _sending = true;
+    _sosHoldTimer?.cancel();
     final db = DatabaseHelper.instance;
 
+    try {
     // Prevent double-trigger: check if already active
     final existing = await db.getActiveIncident(widget.user.id);
     if (existing != null) {
@@ -159,6 +166,9 @@ class EmergencySosBoxState extends State<EmergencySosBox>
           duration: const Duration(seconds: 4),
         ),
       );
+    }
+    } finally {
+      _sending = false;
     }
   }
 
@@ -652,7 +662,11 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                             }
                           },
                           onTapDown: (_) {
-                            if (_sosFired) return;
+                            if (_sosFired ||
+                                _sending ||
+                                TinyMLSensorService.instance.alertOpen) {
+                              return;
+                            }
                             _sosHoldTicks = 0;
                             _sosHoldTimer = Timer.periodic(
                               const Duration(milliseconds: 100),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -75,6 +76,44 @@ class ApiClient {
       body: body == null ? null : jsonEncode(body),
     );
     return _decode(response);
+  }
+
+  /// Uploads local image files and returns public URLs the other role can load.
+  Future<List<String>> uploadImages(
+    List<String> filePaths, {
+    String folder = 'reports',
+  }) async {
+    final existing = filePaths.where((path) {
+      if (path.startsWith('http://') || path.startsWith('https://')) return false;
+      return File(path).existsSync();
+    }).toList();
+    if (existing.isEmpty) {
+      return filePaths
+          .where((path) => path.startsWith('http://') || path.startsWith('https://'))
+          .toList();
+    }
+
+    final token = await tokenProvider();
+    if (token == null || token.isEmpty) {
+      throw ApiException(401, 'Missing auth token');
+    }
+
+    final uri = Uri.parse('$baseUrl/api/v1/uploads/task-proof').replace(
+      queryParameters: {'task_id': folder},
+    );
+    final request = http.MultipartRequest('POST', uri);
+    request.headers['Authorization'] = 'Bearer $token';
+    for (final path in existing) {
+      request.files.add(await http.MultipartFile.fromPath('images', path));
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    final decoded = _decode(response);
+    if (decoded is Map && decoded['urls'] is List) {
+      return (decoded['urls'] as List).map((url) => url.toString()).toList();
+    }
+    return [];
   }
 
   Future<dynamic> delete(String path, {bool withAuth = true}) async {

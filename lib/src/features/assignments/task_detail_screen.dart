@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
 import '../../core/models.dart';
+import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 
 class TaskDetailScreen extends StatefulWidget {
@@ -56,15 +58,24 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Future<void> _uploadProof() async {
-    // Simulated proof upload for now
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
+    if (picked == null) return;
+
     setState(() => _loading = true);
     try {
+      final urls = await widget.api.uploadImages(
+        [picked.path],
+        folder: 'tasks',
+      );
       final updated = await widget.api.patch(
         '/api/v1/tasks/${_task['id']}/status',
         body: {
           'status': 'completed',
-          'proof_images': ['https://example.com/proof.jpg'],
-          'persons_helped': 5,
+          'proof_images': urls,
+          'persons_helped': 1,
         },
       );
       if (mounted) {
@@ -291,6 +302,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           (_task['description'] ?? 'No description provided.').toString(),
           style: const TextStyle(fontSize: 15, height: 1.4),
         ),
+        if (firstNetworkImage(_task['proof_images']) != null) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Photo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          RemoteReportImage(
+            url: firstNetworkImage(_task['proof_images']),
+            size: 160,
+            icon: Icons.photo_outlined,
+          ),
+        ],
       ],
     );
   }

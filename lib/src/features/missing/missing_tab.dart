@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
 import '../../core/location_service.dart';
+import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 
 class MissingTab extends StatefulWidget {
@@ -88,6 +89,13 @@ class _MissingTabState extends State<MissingTab>
     try {
       setState(() => _submitting = true);
 
+      final photoUrls = _pickedReportPhoto == null
+          ? <String>[]
+          : await widget.api.uploadImages(
+              [_pickedReportPhoto!.path],
+              folder: 'missing',
+            );
+
       final body = <String, dynamic>{
         'reporter_phone': _phoneCtrl.text.trim(),
         'name': _nameCtrl.text.trim().isEmpty ? null : _nameCtrl.text.trim(),
@@ -95,11 +103,7 @@ class _MissingTabState extends State<MissingTab>
         'description': _descCtrl.text.trim().isEmpty
             ? null
             : _descCtrl.text.trim(),
-        'photo_urls': _pickedReportPhoto == null
-            ? []
-            : [
-                _pickedReportPhoto!.path,
-              ], // Mocking upload by sending path for now
+        'photo_urls': photoUrls,
       };
 
       if (_lat != null && _lng != null) {
@@ -284,6 +288,13 @@ class _MissingTabState extends State<MissingTab>
                         onPressed: () async {
                           Navigator.pop(ctx);
                           try {
+                            final closePhoto = pickedFile;
+                            final photos = closePhoto == null
+                                ? <String>[]
+                                : await widget.api.uploadImages(
+                                    [closePhoto.path],
+                                    folder: 'missing',
+                                  );
                             await widget.api.patch(
                               '/api/v1/missing/$missingId/found',
                               body: {
@@ -291,7 +302,9 @@ class _MissingTabState extends State<MissingTab>
                                 'condition': condition,
                                 'found_location_desc': _closeLocCtrl.text
                                     .trim(),
-                                'closure_photo': pickedFile?.path ?? '',
+                                'closure_photo': photos.isEmpty
+                                    ? ''
+                                    : photos.first,
                               },
                             );
                             if (!mounted) return;
@@ -565,11 +578,8 @@ class _MissingTabState extends State<MissingTab>
         final item = _board[index] as Map<String, dynamic>;
         final status = (item['status'] ?? 'missing').toString();
         final name = (item['name'] ?? 'Unnamed').toString();
-        final photos = item['photo_urls'] as List?;
         final desc = item['description']?.toString() ?? '';
-        final imageUrl = (photos != null && photos.isNotEmpty)
-            ? photos.first.toString()
-            : '';
+        final imageUrl = firstNetworkImage(item['photo_urls']);
 
         return Card(
           child: Padding(
@@ -577,16 +587,13 @@ class _MissingTabState extends State<MissingTab>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: status == 'found'
-                      ? AppColors.primaryGreen.withValues(alpha: 0.15)
-                      : AppColors.criticalRed.withValues(alpha: 0.15),
-                  backgroundImage: imageUrl.isNotEmpty
-                      ? NetworkImage(imageUrl)
-                      : null,
-                  child: imageUrl.isEmpty
-                      ? Icon(
+                imageUrl == null
+                    ? CircleAvatar(
+                        radius: 28,
+                        backgroundColor: status == 'found'
+                            ? AppColors.primaryGreen.withValues(alpha: 0.15)
+                            : AppColors.criticalRed.withValues(alpha: 0.15),
+                        child: Icon(
                           status == 'found'
                               ? Icons.verified
                               : Icons.person_search,
@@ -594,9 +601,13 @@ class _MissingTabState extends State<MissingTab>
                           color: status == 'found'
                               ? AppColors.primaryGreen
                               : AppColors.criticalRed,
-                        )
-                      : null,
-                ),
+                        ),
+                      )
+                    : RemoteReportImage(
+                        url: imageUrl,
+                        size: 56,
+                        icon: Icons.person_search,
+                      ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

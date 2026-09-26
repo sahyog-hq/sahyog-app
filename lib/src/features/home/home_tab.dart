@@ -166,8 +166,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               padding: const EdgeInsets.all(16),
               children: [
                 const SizedBox(height: 8),
-                _RoleChip(role: widget.user.role),
-                const SizedBox(height: 16),
                 if (_error.isNotEmpty)
                   Text(
                     _error,
@@ -616,31 +614,3 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   }
 }
 
-class _RoleChip extends StatelessWidget {
-  const _RoleChip({required this.role});
-
-  final String role;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: AppColors.primaryGreen.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          role.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.primaryGreen,
-            fontWeight: FontWeight.w800,
-            fontSize: 12,
-            letterSpacing: 1.1,
-          ),
-        ),
-      ),
-    );
-  }
-}
