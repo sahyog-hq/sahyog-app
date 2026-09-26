@@ -150,74 +150,75 @@ class _UserHomeTabState extends State<UserHomeTab>
   // Build Methods
   // ─────────────────────────────────────────────────────────
 
+  Widget _sosBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: EmergencySosBox(
+        key: _sosBoxKey,
+        user: widget.user,
+        api: widget.api,
+        onSosTap: () {
+          final alerts = SocketService.instance.liveSosAlerts.value;
+          if (alerts.isEmpty) return;
+          DatabaseHelper.instance.getActiveIncident(widget.user.id).then((
+            active,
+          ) {
+            if (!context.mounted) return;
+            SosAlertsPanel.show(
+              context: context,
+              alerts: alerts,
+              activeLocalUuid: active?.uuid,
+              onCancelSos: null,
+              onGoToSosPanels: () => widget.onNavigate?.call(1),
+              onNavigateToLocation: (loc) {
+                widget.onNavigate?.call(1, target: loc);
+              },
+            );
+          });
+        },
+        onSosLocationTap: (ll) => widget.onNavigate?.call(1, target: ll),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_loading) return const Center(child: CircularProgressIndicator());
-
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _UserStatusBanner(user: widget.user),
-              const SizedBox(height: 16),
-              Container(
-                height: 228,
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.grey.withValues(alpha: 0.3),
-                    width: 1.0,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
+    return Scaffold(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _UserStatusBanner(user: widget.user),
+                  const SizedBox(height: 16),
+                  Container(
+                    height: 228,
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        width: 1.0,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _buildMiniMap(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              EmergencySosBox(
-                key: _sosBoxKey,
-                user: widget.user,
-                api: widget.api,
-                onSosTap: () {
-                  final alerts = SocketService.instance.liveSosAlerts.value;
-                  if (alerts.isNotEmpty) {
-                    DatabaseHelper.instance
-                        .getActiveIncident(widget.user.id)
-                        .then((active) {
-                          if (context.mounted) {
-                            SosAlertsPanel.show(
-                              context: context,
-                              alerts: alerts,
-                              activeLocalUuid: active?.uuid,
-                              onCancelSos: null,
-                              onGoToSosPanels: () => widget.onNavigate?.call(1),
-                              onNavigateToLocation: (loc) {
-                                widget.onNavigate?.call(1, target: loc);
-                              },
-                            );
-                          }
-                        });
-                  }
-                },
-                onSosLocationTap: (ll) =>
-                    widget.onNavigate?.call(1, target: ll),
-              ),
-              const SizedBox(height: 16),
-              TinyMLControlCard(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: _buildMiniMap(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TinyMLControlCard(
                 api: widget.api,
                 onAutoSosTriggered: (type, desc) {
                    _sosBoxKey.currentState?.triggerSOS(anomalyType: type);
@@ -249,10 +250,10 @@ class _UserHomeTabState extends State<UserHomeTab>
                   (alert) => _AlertCard(alert: alert, api: widget.api),
                 ),
               const SizedBox(height: 32),
-            ],
-          ),
-        ],
-      ),
+                ],
+              ),
+            ),
+      bottomNavigationBar: _sosBar(),
     );
   }
 

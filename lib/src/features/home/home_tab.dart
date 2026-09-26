@@ -156,81 +156,53 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Column(
-      children: [
-        if (_loading) const LinearProgressIndicator(minHeight: 2),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _load,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                const SizedBox(height: 8),
-                if (_error.isNotEmpty)
-                  Text(
-                    _error,
-                    style: const TextStyle(color: AppColors.criticalRed),
-                  ),
-                GestureDetector(
-                  onTap: () {
-                    widget.onNavigate?.call(1);
-                  },
-                  child: Container(
-                    height: 208,
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        width: 1.0,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+    return Scaffold(
+      body: Column(
+        children: [
+          if (_loading) const LinearProgressIndicator(minHeight: 2),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  const SizedBox(height: 8),
+                  if (_error.isNotEmpty)
+                    Text(
+                      _error,
+                      style: const TextStyle(color: AppColors.criticalRed),
+                    ),
+                  GestureDetector(
+                    onTap: () {
+                      widget.onNavigate?.call(1);
+                    },
+                    child: Container(
+                      height: 208,
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.grey.withValues(alpha: 0.3),
+                          width: 1.0,
                         ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: _buildMiniMap(),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _buildMiniMap(),
+                      ),
                     ),
                   ),
-                ),
-                _buildStatsRow(),
-                const SizedBox(height: 12),
-                EmergencySosBox(
-                  key: _sosBoxKey,
-                  user: widget.user,
-                  api: widget.api,
-                  onSosTap: () {
-                    final alerts = SocketService.instance.liveSosAlerts.value;
-                    if (alerts.isNotEmpty) {
-                      DatabaseHelper.instance
-                          .getActiveIncident(widget.user.id)
-                          .then((active) {
-                            if (context.mounted) {
-                              SosAlertsPanel.show(
-                                context: context,
-                                alerts: alerts,
-                                activeLocalUuid: active?.uuid,
-                                onCancelSos: null,
-                                onGoToSosPanels: () =>
-                                    widget.onNavigate?.call(3),
-                                onNavigateToLocation: (loc) =>
-                                    widget.onNavigate?.call(1, target: loc),
-                              );
-                            }
-                          });
-                    }
-                  },
-                  onSosLocationTap: (ll) =>
-                      widget.onNavigate?.call(1, target: ll),
-                ),
-                const SizedBox(height: 12),
-                TinyMLControlCard(
+                  _buildStatsRow(),
+                  const SizedBox(height: 12),
+                  TinyMLControlCard(
                   api: widget.api,
                   onAutoSosTriggered: (type, desc) {
                      _sosBoxKey.currentState?.triggerSOS(anomalyType: type);
@@ -327,7 +299,35 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
         ),
-      ],
+        ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: EmergencySosBox(
+          key: _sosBoxKey,
+          user: widget.user,
+          api: widget.api,
+          onSosTap: () {
+            final alerts = SocketService.instance.liveSosAlerts.value;
+            if (alerts.isEmpty) return;
+            DatabaseHelper.instance.getActiveIncident(widget.user.id).then((
+              active,
+            ) {
+              if (!context.mounted) return;
+              SosAlertsPanel.show(
+                context: context,
+                alerts: alerts,
+                activeLocalUuid: active?.uuid,
+                onCancelSos: null,
+                onGoToSosPanels: () => widget.onNavigate?.call(3),
+                onNavigateToLocation: (loc) =>
+                    widget.onNavigate?.call(1, target: loc),
+              );
+            });
+          },
+          onSosLocationTap: (ll) => widget.onNavigate?.call(1, target: ll),
+        ),
+      ),
     );
   }
 
