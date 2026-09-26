@@ -122,10 +122,9 @@ class _AuthGateState extends State<AuthGate> {
       try {
         final clerkUser = widget.authState.user;
         final meta = clerkUser?.publicMetadata;
-        String? metaRole;
-        if (meta is Map) {
-          metaRole = meta['role']?.toString();
-        }
+        final metaRole = meta == null
+            ? null
+            : Map<String, dynamic>.from(meta as Map)['role']?.toString();
         if (metaRole == 'vehicle' ||
             metaRole == 'driver' ||
             metaRole == 'org:driver') {
