@@ -58,6 +58,7 @@ dependencies:
   permission_handler: ^11.3.1
   flutter_local_notifications: ^17.0.0
   sensors_plus: ^6.0.0
+  tflite_flutter: ^0.11.0
   image_picker: ^1.1.2
 
 dev_dependencies:
@@ -85,6 +86,7 @@ flutter:
 
   assets:
     - lib/assets/favicon.png
+    - assets/models/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -1,10 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/anomaly_detection_service.dart';
 import '../../core/api_client.dart';
 import '../../core/local_notification_service.dart';
-import '../../core/mesh_service.dart';
-import '../../core/tinyml_sensor_service.dart';
-import '../../core/location_service.dart';
 import '../../theme/app_colors.dart';
 
 class TinyMLEmergencyDialog extends StatefulWidget {
@@ -44,59 +41,49 @@ class TinyMLEmergencyDialog extends StatefulWidget {
 
 class _TinyMLEmergencyDialogState extends State<TinyMLEmergencyDialog>
     with SingleTickerProviderStateMixin {
-  int _secondsRemaining = 15;
-  Timer? _timer;
-  bool _sosTriggered = false;
   late AnimationController _pulseController;
+  late final AnomalyDetectionService _engine;
 
   @override
   void initState() {
     super.initState();
+    _engine = AnomalyDetectionService.instance;
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
-
-    _startCountdown();
-
-    // Trigger phone vibration & push alert
+    _engine.timerState.addListener(_onTimerState);
     LocalNotificationService.instance.showMeshSosNotification(
       title: '🚨 ${widget.event.title}',
       body: 'Emergency countdown initiated. Tap I AM OKAY to cancel auto-SOS.',
     );
   }
 
-  void _startCountdown() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_secondsRemaining > 1) {
-        setState(() {
-          _secondsRemaining--;
-        });
-      } else {
-        _timer?.cancel();
-        _triggerAutoSos();
-      }
-    });
+  void _onTimerState() {
+    if (!mounted) return;
+    if (_engine.timerState.value == SosTimerState.expired) {
+      Navigator.of(context).maybePop();
+    }
   }
 
-  Future<void> _triggerAutoSos() async {
-    if (_sosTriggered) return;
-    setState(() {
-      _sosTriggered = true;
-      _secondsRemaining = 0;
-    });
-
-    if (widget.onAutoSosTriggered != null) {
-      widget.onAutoSosTriggered!(widget.event.title, widget.event.description);
-    }
-
-    if (!mounted) return;
+  void _cancel() {
+    _engine.timerState.removeListener(_onTimerState);
+    _engine.cancelSOSTimer();
     Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Emergency countdown cancelled. Glad you are okay!'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _engine.timerState.removeListener(_onTimerState);
+    if (_engine.timerState.value == SosTimerState.running) {
+      _engine.cancelSOSTimer();
+    }
     _pulseController.dispose();
     super.dispose();
   }
@@ -176,13 +163,18 @@ class _TinyMLEmergencyDialogState extends State<TinyMLEmergencyDialog>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${_secondsRemaining}s',
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.criticalRed,
-                    ),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _engine.countdownSeconds,
+                    builder: (context, seconds, _) {
+                      return Text(
+                        '${seconds}s',
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.criticalRed,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -192,16 +184,7 @@ class _TinyMLEmergencyDialogState extends State<TinyMLEmergencyDialog>
               width: double.infinity,
               height: 48,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  _timer?.cancel();
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Emergency countdown cancelled. Glad you are okay!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
+                onPressed: _cancel,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,

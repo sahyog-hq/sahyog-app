@@ -59,6 +59,7 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   void dispose() {
+    TinyMLSensorService.instance.stopMonitoring();
     ConnectivityService.instance.dispose();
     SocketService.instance.dispose();
     super.dispose();
