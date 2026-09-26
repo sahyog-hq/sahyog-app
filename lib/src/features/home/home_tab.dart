@@ -179,10 +179,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       height: 208,
                       padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.card(context),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.grey.withValues(alpha: 0.3),
+                          color: AppColors.border(context),
                           width: 1.0,
                         ),
                         boxShadow: [

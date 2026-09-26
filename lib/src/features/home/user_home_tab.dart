@@ -197,10 +197,10 @@ class _UserHomeTabState extends State<UserHomeTab>
                   height: 228,
                   padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.card(context),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.grey.withValues(alpha: 0.3),
+                      color: AppColors.border(context),
                       width: 1.0,
                     ),
                     boxShadow: [
@@ -325,13 +325,18 @@ class _UserStatusBanner extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primaryGreen.withValues(alpha: 0.1), Colors.white],
+          colors: [
+            AppColors.primaryGreen.withValues(alpha: 0.1),
+            AppColors.card(context),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.primaryGreen.withValues(alpha: 0.2),
+          color: AppColors.isDark(context)
+              ? AppColors.border(context)
+              : AppColors.primaryGreen.withValues(alpha: 0.2),
         ),
       ),
       child: Row(

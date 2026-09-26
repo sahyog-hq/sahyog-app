@@ -761,10 +761,12 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                   duration: const Duration(milliseconds: 280),
                   curve: Curves.easeOutCubic,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.card(context),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.criticalRed.withValues(alpha: 0.8),
+                      color: AppColors.isDark(context)
+                          ? AppColors.border(context)
+                          : AppColors.criticalRed.withValues(alpha: 0.8),
                       width: 1.5,
                     ),
                     boxShadow: [
@@ -873,7 +875,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                                                   ? l10n.slideAType((5.0 - (_sosHoldTicks / 10)).toStringAsFixed(1))
                                                   : l10n.holdToRequestHelp,
                                               style: TextStyle(
-                                                color: Colors.black54,
+                                                color: AppColors.mutedText(context),
                                                 fontSize: 12,
                                                 fontWeight: _sosHoldTicks > 0
                                                     ? FontWeight.bold
@@ -931,10 +933,10 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                                 l10n.keepHoldingSlide(
                                   _disasterLabel(l10n, _selectedDisaster),
                                 ),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black54,
+                                  color: AppColors.mutedText(context),
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -1064,7 +1066,11 @@ class _DisasterSegment extends StatelessWidget {
             style: TextStyle(
               fontSize: 10.5,
               fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-              color: selected ? Colors.white : const Color(0xFF991B1B),
+              color: selected
+                  ? Colors.white
+                  : (AppColors.isDark(context)
+                      ? const Color(0xFFFFB4AB)
+                      : const Color(0xFF991B1B)),
               letterSpacing: -0.2,
             ),
           ),

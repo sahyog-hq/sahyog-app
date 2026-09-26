@@ -102,38 +102,38 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: const Color(0xFF0B1013),
+      scaffoldBackgroundColor: const Color(0xFF12171C),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF0B1013),
+        backgroundColor: Color(0xFF12171C),
         foregroundColor: AppColors.neutralLight,
         elevation: 0,
         scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: Color(0xFF2A3439), width: 0.5)),
+        shape: Border(bottom: BorderSide(color: AppColors.darkBorder, width: 0.5)),
       ),
       cardTheme: CardThemeData(
-        color: const Color(0xFF151D23),
+        color: AppColors.darkCard,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFF2A3439)),
+          side: const BorderSide(color: AppColors.darkBorder),
         ),
       ),
 
       navigationBarTheme: NavigationBarThemeData(
         height: 65,
-        backgroundColor: const Color(0xFF0B1013),
+        backgroundColor: const Color(0xFF12171C),
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.primaryGreen.withValues(alpha: 0.15),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       inputDecorationTheme: InputDecorationTheme(
-        fillColor: const Color(0xFF151D23),
+        fillColor: AppColors.darkCard,
         filled: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+          borderSide: const BorderSide(color: AppColors.darkBorder),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,

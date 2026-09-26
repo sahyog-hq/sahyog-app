@@ -54,7 +54,6 @@ class _TinyMLControlCardState extends State<TinyMLControlCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
     return Card(
@@ -64,10 +63,10 @@ class _TinyMLControlCardState extends State<TinyMLControlCard> {
         side: BorderSide(
           color: _isEnabled
               ? AppColors.primaryGreen.withValues(alpha: 0.3)
-              : Colors.grey.withValues(alpha: 0.2),
+              : AppColors.border(context),
         ),
       ),
-      color: isDark ? const Color(0xFF1E242B) : Colors.white,
+      color: AppColors.card(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
