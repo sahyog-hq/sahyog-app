@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/api_client.dart';
 import '../../core/database_helper.dart';
 import '../../core/location_service.dart';
@@ -45,6 +46,22 @@ class EmergencySosBoxState extends State<EmergencySosBox>
   bool _sosFired = false;
   String? _activeSosId;
   String? _activeLocalUuid;
+  String _selectedDisaster = 'Emergency';
+  int? _activePointer;
+
+  static const _disasterTypes = <({String label, String value, IconData icon})>[
+    (label: 'Flood', value: 'Flood', icon: Icons.flood_outlined),
+    (label: 'Quake', value: 'Earthquake', icon: Icons.landslide_outlined),
+    (label: 'Fire', value: 'Fire', icon: Icons.local_fire_department_outlined),
+    (label: 'Slide', value: 'Landslide', icon: Icons.terrain_outlined),
+    (label: 'Medical', value: 'Medical', icon: Icons.medical_services_outlined),
+    (label: 'Crash', value: 'Accident', icon: Icons.car_crash_outlined),
+    (label: 'Other', value: 'Emergency', icon: Icons.emergency_outlined),
+  ];
+
+  final Map<String, GlobalKey> _chipKeys = {
+    for (final type in _disasterTypes) type.value: GlobalKey(),
+  };
 
   @override
   void initState() {
@@ -288,10 +305,65 @@ class EmergencySosBoxState extends State<EmergencySosBox>
 
   void _cancelHold() {
     _sosHoldTimer?.cancel();
+    _activePointer = null;
     if (mounted) {
       setState(() {
         _sosHoldTicks = 0;
+        _selectedDisaster = 'Emergency';
       });
+    }
+  }
+
+  void _beginHold() {
+    if (_sosFired || _sending || TinyMLSensorService.instance.alertOpen) {
+      return;
+    }
+    _sosHoldTicks = 0;
+    _selectedDisaster = 'Emergency';
+    _sosHoldTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (!mounted) return;
+      setState(() {
+        _sosHoldTicks++;
+        if (_sosHoldTicks >= 50) {
+          _sosHoldTimer?.cancel();
+          _sosFired = true;
+          triggerSOS(anomalyType: _selectedDisaster);
+        }
+      });
+    });
+  }
+
+  void _handleIdleTap(Offset globalPosition) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final local = box.globalToLocal(globalPosition);
+    final width = box.size.width;
+    if (local.dx < width * 0.22) {
+      _fetchAndShowSosAlerts();
+    } else if (local.dx > width * 0.78) {
+      NearbySosRadarSheet.show(
+        context,
+        onNavigateToLocation: (loc) => widget.onSosLocationTap?.call(loc),
+      );
+    } else if (widget.onSosTap != null) {
+      widget.onSosTap!();
+    } else {
+      _fetchAndShowSosAlerts();
+    }
+  }
+
+  void _selectDisasterAt(Offset globalPosition) {
+    for (final type in _disasterTypes) {
+      final box =
+          _chipKeys[type.value]?.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) continue;
+      final origin = box.localToGlobal(Offset.zero);
+      final rect = (origin & box.size).inflate(10);
+      if (rect.contains(globalPosition) && _selectedDisaster != type.value) {
+        HapticFeedback.selectionClick();
+        setState(() => _selectedDisaster = type.value);
+        return;
+      }
     }
   }
 
@@ -592,179 +664,271 @@ class EmergencySosBoxState extends State<EmergencySosBox>
             },
           ),
         ] else ...[
-          Container(
-            height: 88,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.criticalRed, width: 2.0),
-              boxShadow: [
-                if (_sosHoldTicks > 0)
-                  BoxShadow(
-                    color: AppColors.criticalRed.withValues(alpha: 0.25),
-                    blurRadius: 14,
-                    spreadRadius: progress * 5,
-                  )
-                else
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Stack(
-                children: [
-                  // Hold Progress Fill
-                  if (!_sosFired && _sosHoldTicks > 0)
-                    Positioned.fill(
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: progress,
-                        child: Container(
-                          color: AppColors.criticalRed.withValues(alpha: 0.15),
-                        ),
+          Listener(
+            onPointerDown: (event) {
+              if (_activePointer != null) return;
+              _activePointer = event.pointer;
+              _beginHold();
+            },
+            onPointerMove: (event) {
+              if (event.pointer != _activePointer) return;
+              _selectDisasterAt(event.position);
+            },
+            onPointerUp: (event) {
+              if (event.pointer != _activePointer) return;
+              final ticks = _sosHoldTicks;
+              final position = event.position;
+              if (ticks < 50) {
+                final wasTap = ticks < 5;
+                _cancelHold();
+                if (wasTap) _handleIdleTap(position);
+              }
+              _activePointer = null;
+            },
+            onPointerCancel: (event) {
+              if (event.pointer != _activePointer) return;
+              _cancelHold();
+            },
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.criticalRed, width: 2.0),
+                  boxShadow: [
+                    if (_sosHoldTicks > 0)
+                      BoxShadow(
+                        color: AppColors.criticalRed.withValues(alpha: 0.25),
+                        blurRadius: 14,
+                        spreadRadius: progress * 5,
+                      )
+                    else
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // ── Section 1: Left SOS Icon (Fetches and opens live configured SOS page) ──
-                      Expanded(
-                        flex: 2,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _fetchAndShowSosAlerts,
-                            child: const Center(
-                              child: Icon(
-                                Icons.emergency_rounded,
-                                color: AppColors.criticalRed,
-                                size: 32,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Vertical Divider 1
-                      Container(
-                        width: 1.5,
-                        color: AppColors.criticalRed.withValues(alpha: 0.3),
-                      ),
-
-                      // ── Section 2: Center HOLD FOR SOS ──
-                      Expanded(
-                        flex: 6,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            if (widget.onSosTap != null) {
-                              widget.onSosTap!();
-                            } else {
-                              _fetchAndShowSosAlerts();
-                            }
-                          },
-                          onTapDown: (_) {
-                            if (_sosFired ||
-                                _sending ||
-                                TinyMLSensorService.instance.alertOpen) {
-                              return;
-                            }
-                            _sosHoldTicks = 0;
-                            _sosHoldTimer = Timer.periodic(
-                              const Duration(milliseconds: 100),
-                              (timer) {
-                                if (mounted) {
-                                    setState(() {
-                                      _sosHoldTicks++;
-                                      if (_sosHoldTicks >= 50) {
-                                        _sosHoldTimer?.cancel();
-                                        _sosFired = true;
-                                        triggerSOS();
-                                      }
-                                    });
-                                }
-                              },
-                            );
-                          },
-                          onTapUp: (_) => _cancelHold(),
-                          onTapCancel: () => _cancelHold(),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'HOLD FOR SOS',
-                                  style: TextStyle(
-                                    color: AppColors.criticalRed,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 19,
-                                    letterSpacing: 1.6,
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 88,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Stack(
+                          children: [
+                            if (!_sosFired && _sosHoldTicks > 0)
+                              Positioned.fill(
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: progress,
+                                  child: Container(
+                                    color: AppColors.criticalRed.withValues(
+                                      alpha: 0.15,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  (_sosHoldTicks > 0)
-                                      ? 'Holding... ${(5.0 - (_sosHoldTicks / 10)).toStringAsFixed(1)}s'
-                                      : 'Hold 5s to request help',
-                                  style: TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 12,
-                                    fontWeight: _sosHoldTicks > 0
-                                        ? FontWeight.bold
-                                        : FontWeight.w500,
+                              ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.emergency_rounded,
+                                      color: AppColors.criticalRed,
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 1.5,
+                                  color: AppColors.criticalRed.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 6,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.translucent,
+                                    onTap: _sosHoldTicks > 0
+                                        ? null
+                                        : () {
+                                            if (widget.onSosTap != null) {
+                                              widget.onSosTap!();
+                                            } else {
+                                              _fetchAndShowSosAlerts();
+                                            }
+                                          },
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            _sosHoldTicks > 0
+                                                ? _selectedDisaster.toUpperCase()
+                                                : 'HOLD FOR SOS',
+                                            style: const TextStyle(
+                                              color: AppColors.criticalRed,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 19,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            _sosHoldTicks > 0
+                                                ? 'Slide a type • ${(5.0 - (_sosHoldTicks / 10)).toStringAsFixed(1)}s'
+                                                : 'Hold 5s to request help',
+                                            style: TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 12,
+                                              fontWeight: _sosHoldTicks > 0
+                                                  ? FontWeight.bold
+                                                  : FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 1.5,
+                                  color: AppColors.criticalRed.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: GestureDetector(
+                                    onTap: _sosHoldTicks > 0
+                                        ? null
+                                        : () {
+                                            NearbySosRadarSheet.show(
+                                              context,
+                                              onNavigateToLocation: (loc) {
+                                                widget.onSosLocationTap?.call(
+                                                  loc,
+                                                );
+                                              },
+                                            );
+                                          },
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.radar_rounded,
+                                        color: AppColors.criticalRed,
+                                        size: 28,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                          ],
                         ),
                       ),
-
-                      // Vertical Divider 2
-                      Container(
-                        width: 1.5,
-                        color: AppColors.criticalRed.withValues(alpha: 0.3),
-                      ),
-
-                      // ── Section 3: Right Hotspot / Radar Scan ──
-                      Expanded(
-                        flex: 2,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              NearbySosRadarSheet.show(
-                                context,
-                                onNavigateToLocation: (loc) {
-                                  if (widget.onSosLocationTap != null) {
-                                    widget.onSosLocationTap!(loc);
-                                  }
-                                },
-                              );
-                            },
-                            child: const Center(
-                              child: Icon(
-                                Icons.radar_rounded,
-                                color: AppColors.criticalRed,
-                                size: 28,
+                    ),
+                    if (_sosHoldTicks >= 5) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Keep holding — slide to ${_selectedDisaster}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black54,
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: Row(
+                                children: [
+                                  for (final type in _disasterTypes) ...[
+                                    _DisasterHoldChip(
+                                      key: _chipKeys[type.value],
+                                      label: type.label,
+                                      icon: type.icon,
+                                      selected: _selectedDisaster == type.value,
+                                    ),
+                                    const SizedBox(width: 6),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ],
+    );
+  }
+}
+
+class _DisasterHoldChip extends StatelessWidget {
+  const _DisasterHoldChip({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.selected,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: selected
+            ? AppColors.criticalRed
+            : AppColors.criticalRed.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.criticalRed.withValues(alpha: selected ? 1 : 0.25),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: selected ? Colors.white : AppColors.criticalRed,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : AppColors.criticalRed,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

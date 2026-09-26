@@ -151,9 +151,7 @@ class _UserHomeTabState extends State<UserHomeTab>
   // ─────────────────────────────────────────────────────────
 
   Widget _sosBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: EmergencySosBox(
+    return EmergencySosBox(
         key: _sosBoxKey,
         user: widget.user,
         api: widget.api,
@@ -177,7 +175,6 @@ class _UserHomeTabState extends State<UserHomeTab>
           });
         },
         onSosLocationTap: (ll) => widget.onNavigate?.call(1, target: ll),
-      ),
     );
   }
 
@@ -219,6 +216,8 @@ class _UserHomeTabState extends State<UserHomeTab>
                   ),
                 ),
                 const SizedBox(height: 16),
+                _sosBar(),
+                const SizedBox(height: 16),
                 TinyMLControlCard(
                   api: widget.api,
                   onAutoSosTriggered: (type, desc) {
@@ -255,7 +254,6 @@ class _UserHomeTabState extends State<UserHomeTab>
             ),
           ),
         ),
-        _sosBar(),
       ],
     );
   }

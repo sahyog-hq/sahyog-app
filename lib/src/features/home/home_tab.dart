@@ -201,6 +201,32 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                   _buildStatsRow(),
                   const SizedBox(height: 12),
+                  EmergencySosBox(
+                    key: _sosBoxKey,
+                    user: widget.user,
+                    api: widget.api,
+                    onSosTap: () {
+                      final alerts = SocketService.instance.liveSosAlerts.value;
+                      if (alerts.isEmpty) return;
+                      DatabaseHelper.instance
+                          .getActiveIncident(widget.user.id)
+                          .then((active) {
+                        if (!context.mounted) return;
+                        SosAlertsPanel.show(
+                          context: context,
+                          alerts: alerts,
+                          activeLocalUuid: active?.uuid,
+                          onCancelSos: null,
+                          onGoToSosPanels: () => widget.onNavigate?.call(3),
+                          onNavigateToLocation: (loc) =>
+                              widget.onNavigate?.call(1, target: loc),
+                        );
+                      });
+                    },
+                    onSosLocationTap: (ll) =>
+                        widget.onNavigate?.call(1, target: ll),
+                  ),
+                  const SizedBox(height: 12),
                   TinyMLControlCard(
                   api: widget.api,
                   onAutoSosTriggered: (type, desc) {
@@ -296,33 +322,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 const SizedBox(height: 16),
               ],
             ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: EmergencySosBox(
-            key: _sosBoxKey,
-            user: widget.user,
-            api: widget.api,
-            onSosTap: () {
-              final alerts = SocketService.instance.liveSosAlerts.value;
-              if (alerts.isEmpty) return;
-              DatabaseHelper.instance.getActiveIncident(widget.user.id).then((
-                active,
-              ) {
-                if (!context.mounted) return;
-                SosAlertsPanel.show(
-                  context: context,
-                  alerts: alerts,
-                  activeLocalUuid: active?.uuid,
-                  onCancelSos: null,
-                  onGoToSosPanels: () => widget.onNavigate?.call(3),
-                  onNavigateToLocation: (loc) =>
-                      widget.onNavigate?.call(1, target: loc),
-                );
-              });
-            },
-            onSosLocationTap: (ll) => widget.onNavigate?.call(1, target: ll),
           ),
         ),
       ],
