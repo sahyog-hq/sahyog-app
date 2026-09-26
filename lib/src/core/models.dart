@@ -55,7 +55,7 @@ class AppUser {
   bool get isOrganization => role == 'organization';
   bool get isUser => role == 'user';
 
-  bool get isVehicle => role == 'vehicle';
+  bool get isVehicle => role == 'vehicle' || role == 'driver';
 
   factory AppUser.fromSync(Map<String, dynamic> json) {
     return AppUser(
@@ -132,10 +132,11 @@ String normalizeRole(String rawRole) {
     'org:organization': 'organization',
     'user': 'user',
     'vehicle': 'vehicle',
+    'driver': 'vehicle',
+    'org:driver': 'vehicle',
   };
 
-  return roleMap[rawRole] ??
-      'user'; // Default to user if unknown for safety? Actually volunteer is safer for legacy, but let's stick to map.
+  return roleMap[rawRole.toLowerCase()] ?? 'user';
 }
 
 double? parseLat(dynamic value) {

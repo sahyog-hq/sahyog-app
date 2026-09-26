@@ -110,10 +110,26 @@ class _AuthGateState extends State<AuthGate> {
         final meRaw = await _api.get('/api/users/me');
         if (meRaw is Map<String, dynamic>) {
           final me = AppUser.fromMe(meRaw);
+          final driver = user.isVehicle || me.isVehicle;
           user = me.copyWith(
             name: user.name.isNotEmpty ? user.name : me.name,
             email: me.email.isNotEmpty ? me.email : user.email,
+            role: driver ? 'vehicle' : me.role,
           );
+        }
+      } catch (_) {}
+
+      try {
+        final clerkUser = widget.authState.user;
+        final meta = clerkUser?.publicMetadata;
+        String? metaRole;
+        if (meta is Map) {
+          metaRole = meta['role']?.toString();
+        }
+        if (metaRole == 'vehicle' ||
+            metaRole == 'driver' ||
+            metaRole == 'org:driver') {
+          user = user.copyWith(role: 'vehicle');
         }
       } catch (_) {}
 
