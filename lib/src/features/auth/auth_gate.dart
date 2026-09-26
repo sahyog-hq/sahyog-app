@@ -11,6 +11,7 @@ import 'dart:convert';
 import '../../core/api_client.dart';
 import '../../core/app_config.dart';
 import '../../core/models.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../core/connectivity_service.dart';
 import '../../core/socket_service.dart';
@@ -235,10 +236,10 @@ class _UserAppShellState extends State<UserAppShell> {
   LatLng? _mapTarget;
   final ValueNotifier<int> _refreshNotifier = ValueNotifier(0);
 
-  static const _titles = ['Dashboard', 'Map', 'Missing', 'Profile'];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final titles = [l10n.dashboard, l10n.map, l10n.missing, l10n.profile];
     final tabs = [
       UserHomeTab(
         key: ValueKey('u_home_${_index}_${_refreshNotifier.value}'),
@@ -285,7 +286,7 @@ class _UserAppShellState extends State<UserAppShell> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                _titles[_index],
+                titles[_index],
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -324,26 +325,26 @@ class _UserAppShellState extends State<UserAppShell> {
       bottomNavigationBar: _StyledBottomNavBar(
         selectedIndex: _index,
         onDestinationSelected: (index) => setState(() => _index = index),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard_rounded),
+            label: l10n.dashboard,
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map_rounded),
-            label: 'Map',
+            icon: const Icon(Icons.map_outlined),
+            selectedIcon: const Icon(Icons.map_rounded),
+            label: l10n.map,
           ),
           NavigationDestination(
-            icon: Icon(Icons.people_alt_outlined),
-            selectedIcon: Icon(Icons.people_alt_rounded),
-            label: 'Missing',
+            icon: const Icon(Icons.people_alt_outlined),
+            selectedIcon: const Icon(Icons.people_alt_rounded),
+            label: l10n.missing,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline_rounded),
+            selectedIcon: const Icon(Icons.person_rounded),
+            label: l10n.profile,
           ),
         ],
       ),
@@ -366,10 +367,10 @@ class _GeneralAppShellState extends State<GeneralAppShell> {
   LatLng? _mapTarget;
   final ValueNotifier<int> _refreshNotifier = ValueNotifier(0);
 
-  static const _titles = ['Dashboard', 'Map', 'SOS', 'Tasks', 'Profile'];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final titles = [l10n.dashboard, l10n.map, l10n.sos, l10n.tasks, l10n.profile];
     final tabs = [
       HomeTab(
         key: ValueKey('home_${_index}_${_refreshNotifier.value}'),
@@ -422,7 +423,7 @@ class _GeneralAppShellState extends State<GeneralAppShell> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                _titles[_index],
+                titles[_index],
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -461,31 +462,31 @@ class _GeneralAppShellState extends State<GeneralAppShell> {
       bottomNavigationBar: _StyledBottomNavBar(
         selectedIndex: _index,
         onDestinationSelected: (index) => setState(() => _index = index),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Home',
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home_rounded),
+            label: l10n.home,
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map_rounded),
-            label: 'Map',
+            icon: const Icon(Icons.map_outlined),
+            selectedIcon: const Icon(Icons.map_rounded),
+            label: l10n.map,
           ),
           NavigationDestination(
-            icon: Icon(Icons.sos_outlined),
-            selectedIcon: Icon(Icons.sos_rounded),
-            label: 'SOS',
+            icon: const Icon(Icons.sos_outlined),
+            selectedIcon: const Icon(Icons.sos_rounded),
+            label: l10n.sos,
           ),
           NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment_rounded),
-            label: 'Tasks',
+            icon: const Icon(Icons.assignment_outlined),
+            selectedIcon: const Icon(Icons.assignment_rounded),
+            label: l10n.tasks,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline_rounded),
+            selectedIcon: const Icon(Icons.person_rounded),
+            label: l10n.profile,
           ),
         ],
       ),
@@ -511,10 +512,10 @@ class _CoordinatorAppShellState extends State<CoordinatorAppShell> {
   LatLng? _mapTarget;
   final ValueNotifier<int> _refreshNotifier = ValueNotifier(0);
 
-  static const _titles = ['Dashboard', 'Map', 'Operations', 'SOS', 'Profile'];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final titles = [l10n.dashboard, l10n.map, l10n.operations, l10n.sos, l10n.profile];
     final tabs = [
       CoordinatorDashboardTab(
         key: ValueKey('c_dash_${_refreshNotifier.value}'),
@@ -584,7 +585,7 @@ class _CoordinatorAppShellState extends State<CoordinatorAppShell> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                _titles[_index],
+                titles[_index],
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -623,31 +624,31 @@ class _CoordinatorAppShellState extends State<CoordinatorAppShell> {
       bottomNavigationBar: _StyledBottomNavBar(
         selectedIndex: _index,
         onDestinationSelected: (index) => setState(() => _index = index),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard_rounded),
+            label: l10n.dashboard,
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map_rounded),
-            label: 'Map',
+            icon: const Icon(Icons.map_outlined),
+            selectedIcon: const Icon(Icons.map_rounded),
+            label: l10n.map,
           ),
           NavigationDestination(
-            icon: Icon(Icons.hub_outlined),
-            selectedIcon: Icon(Icons.hub_rounded),
-            label: 'Operations',
+            icon: const Icon(Icons.hub_outlined),
+            selectedIcon: const Icon(Icons.hub_rounded),
+            label: l10n.operations,
           ),
           NavigationDestination(
-            icon: Icon(Icons.sos_outlined),
-            selectedIcon: Icon(Icons.sos_rounded),
-            label: 'SOS',
+            icon: const Icon(Icons.sos_outlined),
+            selectedIcon: const Icon(Icons.sos_rounded),
+            label: l10n.sos,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline_rounded),
+            selectedIcon: const Icon(Icons.person_rounded),
+            label: l10n.profile,
           ),
         ],
       ),

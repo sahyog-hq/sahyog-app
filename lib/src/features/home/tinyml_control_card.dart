@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
 import '../../core/tinyml_sensor_service.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import 'tinyml_emergency_dialog.dart';
 
@@ -47,6 +48,7 @@ class _TinyMLControlCardState extends State<TinyMLControlCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Card(
       elevation: 0,
@@ -84,17 +86,17 @@ class _TinyMLControlCardState extends State<TinyMLControlCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'TinyML Sensor Safeguard',
-                        style: TextStyle(
+                      Text(
+                        l10n.tinymlTitle,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         _isEnabled
-                            ? 'Active — Real-time crash & immobility detector'
-                            : 'Disabled — Motion monitoring paused',
+                            ? '${l10n.detecting_activity} — ${l10n.tinymlActive}'
+                            : l10n.tinymlDisabled,
                         style: TextStyle(
                           fontSize: 11,
                           color: Theme.of(context)

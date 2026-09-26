@@ -2,10 +2,13 @@ import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:clerk_flutter/src/widgets/authentication/clerk_oauth_panel.dart';
 import 'package:clerk_flutter/src/widgets/authentication/clerk_sign_in_panel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sahyog_app/src/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'core/language_provider.dart';
 import 'features/auth/auth_gate.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 
 const clerkPublishableKey =
     'pk_test_c2V0LWdhemVsbGUtNTI3Ny5jbGVyay5hY2NvdW50cy5kZXYk';
@@ -20,6 +23,7 @@ class SahyogApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final language = LanguageScope.of(context);
     return ClerkAuth(
       config: ClerkAuthConfig(
         publishableKey: clerkPublishableKey,
@@ -27,6 +31,21 @@ class SahyogApp extends StatelessWidget {
       ),
       child: MaterialApp(
         title: 'Sahyog',
+        locale: language.locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        localeResolutionCallback: (locale, supported) {
+          if (locale == null) return const Locale('en');
+          for (final item in supported) {
+            if (item.languageCode == locale.languageCode) return item;
+          }
+          return const Locale('en');
+        },
         navigatorKey: navigatorKey,
         scaffoldMessengerKey: scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
@@ -87,7 +106,7 @@ class _SignedOutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Sahyog',
+                  AppLocalizations.of(context).appTitle,
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF27B469),
@@ -101,9 +120,9 @@ class _SignedOutScreen extends StatelessWidget {
                     color: const Color(0xFF27B469).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
-                    'DISASTER RESPONSE NETWORK',
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context).appTagline,
+                    style: const TextStyle(
                       color: Color(0xFF27B469),
                       letterSpacing: 1.2,
                       fontSize: 10,
@@ -123,7 +142,7 @@ class _SignedOutScreen extends StatelessWidget {
                     Icon(Icons.lock_outline, size: 14, color: Colors.grey[400]),
                     const SizedBox(width: 8),
                     Text(
-                      'Secure SSL Encrypted Connection',
+                      AppLocalizations.of(context).secureConnection,
                       style: TextStyle(color: Colors.grey[400], fontSize: 12),
                     ),
                   ],
@@ -163,9 +182,9 @@ class _CustomSignInArea extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Sign In',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).signIn,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,
               color: Color(0xFF0F172A),
@@ -173,9 +192,9 @@ class _CustomSignInArea extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Connect with Google or use email',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).signInHint,
+            style: const TextStyle(
               color: Color(0xFF64748B),
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -183,23 +202,23 @@ class _CustomSignInArea extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           ClerkOAuthPanel(),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
             child: Row(
               children: [
-                Expanded(child: Divider()),
+                const Expanded(child: Divider()),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    'OR',
-                    style: TextStyle(
+                    AppLocalizations.of(context).orDivider,
+                    style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                Expanded(child: Divider()),
+                const Expanded(child: Divider()),
               ],
             ),
           ),

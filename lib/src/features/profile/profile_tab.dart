@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
 import '../../core/location_service.dart';
 import '../../core/models.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
+import 'language_switcher.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key, required this.api, required this.user});
@@ -36,14 +38,15 @@ class _ProfileTabState extends State<ProfileTab> {
         },
       );
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+        SnackBar(content: Text(l10n.profileUpdated)),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).updateFailed(e.toString()))),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -60,15 +63,17 @@ class _ProfileTabState extends State<ProfileTab> {
       if (!mounted) return;
       if (!silent) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location synced successfully')),
+          SnackBar(content: Text(AppLocalizations.of(context).locationSynced)),
         );
       }
     } catch (e) {
       if (!mounted) return;
       if (!silent) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Location sync failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).locationSyncFailed(e.toString())),
+          ),
+        );
       }
     } finally {
       if (mounted && !silent) setState(() => _busy = false);
@@ -87,21 +92,20 @@ class _ProfileTabState extends State<ProfileTab> {
           ? raw['is_active'] as bool
           : value;
       setState(() => _availability = next);
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            next
-                ? 'You are now marked active.'
-                : 'You are now marked inactive.',
-          ),
+          content: Text(next ? l10n.markedActive : l10n.markedInactive),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _availability = !_availability);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Availability update failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).availabilityUpdateFailed(e.toString())),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -143,6 +147,7 @@ class _ProfileTabState extends State<ProfileTab> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isVolunteer = widget.user.isVolunteer;
+    final l10n = AppLocalizations.of(context);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -189,7 +194,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       ),
                     ),
                     Text(
-                      email.isEmpty ? 'No email linked' : email,
+                      email.isEmpty ? l10n.noEmailLinked : email,
                       style: theme.textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
@@ -201,7 +206,7 @@ class _ProfileTabState extends State<ProfileTab> {
                               .withValues(alpha: 0.1),
                       side: BorderSide.none,
                       label: Text(
-                        (widget.user.isUser ? 'CITIZEN' : widget.user.role)
+                        (widget.user.isUser ? l10n.citizen : widget.user.role)
                             .toUpperCase(),
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
@@ -240,13 +245,13 @@ class _ProfileTabState extends State<ProfileTab> {
                   Icons.health_and_safety,
                   color: AppColors.primaryGreen,
                 ),
-                title: const Text(
-                  'Health & Contact Details',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                title: Text(
+                  l10n.healthContactDetails,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: const Text(
-                  'Update info for emergency responders',
-                  style: TextStyle(fontSize: 12),
+                subtitle: Text(
+                  l10n.healthContactSubtitle,
+                  style: const TextStyle(fontSize: 12),
                 ),
                 children: [
                   Padding(
@@ -257,24 +262,24 @@ class _ProfileTabState extends State<ProfileTab> {
                         const Divider(),
                         const SizedBox(height: 12),
                         _buildProfileField(
-                          label: 'Blood Group',
+                          label: l10n.bloodGroup,
                           controller: _bloodCtrl,
                           icon: Icons.bloodtype,
-                          hint: 'e.g. O+',
+                          hint: l10n.bloodGroupHint,
                         ),
                         const SizedBox(height: 12),
                         _buildProfileField(
-                          label: 'Address',
+                          label: l10n.address,
                           controller: _addrCtrl,
                           icon: Icons.home,
-                          hint: 'Full physical address',
+                          hint: l10n.addressHint,
                         ),
                         const SizedBox(height: 12),
                         _buildProfileField(
-                          label: 'Medical History',
+                          label: l10n.medicalHistory,
                           controller: _medCtrl,
                           icon: Icons.medical_services,
-                          hint: 'Allergies, chronic conditions...',
+                          hint: l10n.medicalHistoryHint,
                           maxLines: 3,
                         ),
                         const SizedBox(height: 16),
@@ -283,7 +288,7 @@ class _ProfileTabState extends State<ProfileTab> {
                           child: FilledButton.icon(
                             onPressed: _busy ? null : _updateUserDetails,
                             icon: const Icon(Icons.save, size: 18),
-                            label: const Text('Save Details'),
+                            label: Text(l10n.saveDetails),
                           ),
                         ),
                       ],
@@ -315,10 +320,8 @@ class _ProfileTabState extends State<ProfileTab> {
                           setState(() => _availability = value);
                           _toggleAvailability(value);
                         },
-                  title: const Text('Volunteer Availability'),
-                  subtitle: const Text(
-                    'Reflects directly to server live status.',
-                  ),
+                  title: Text(l10n.volunteerAvailability),
+                  subtitle: Text(l10n.volunteerAvailabilitySubtitle),
                 ),
                 SwitchListTile(
                   value: _trackingEnabled,
@@ -328,10 +331,8 @@ class _ProfileTabState extends State<ProfileTab> {
                           setState(() => _trackingEnabled = value);
                           if (value) _syncLocationOnce();
                         },
-                  title: const Text('Enable Location Sync'),
-                  subtitle: const Text(
-                    'Required for live disaster monitoring.',
-                  ),
+                  title: Text(l10n.enableLocationSync),
+                  subtitle: Text(l10n.enableLocationSyncSubtitle),
                 ),
                 if (_trackingEnabled)
                   Padding(
@@ -341,7 +342,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       child: FilledButton.icon(
                         onPressed: _busy ? null : _syncLocationOnce,
                         icon: const Icon(Icons.my_location),
-                        label: const Text('Sync Now'),
+                        label: Text(l10n.syncNow),
                       ),
                     ),
                   ),
@@ -355,14 +356,14 @@ class _ProfileTabState extends State<ProfileTab> {
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: Colors.grey.shade200),
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Availability and location toggle are enabled only for volunteer login.',
-              ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.availabilityVolunteerOnly),
             ),
           ),
 
+        const SizedBox(height: 16),
+        const LanguageSwitcher(),
         const SizedBox(height: 16),
 
         Card(
@@ -373,7 +374,7 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           child: ExpansionTile(
             leading: const Icon(Icons.account_circle),
-            title: const Text('Manage Account'),
+            title: Text(l10n.manageAccount),
             children: const [
               Padding(
                 padding: EdgeInsets.all(12),
@@ -394,7 +395,7 @@ class _ProfileTabState extends State<ProfileTab> {
               backgroundColor: Colors.redAccent,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            label: const Text('Sign Out'),
+            label: Text(l10n.signOut),
           ),
         ),
       ],

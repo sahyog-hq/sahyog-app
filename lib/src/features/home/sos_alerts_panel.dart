@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/location_service.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
 class SosAlertsPanel {
@@ -62,7 +63,7 @@ class SosAlertsPanel {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${alerts.length} Active SOS Alert${alerts.length > 1 ? 's' : ''}',
+                        '${alerts.length} ${AppLocalizations.of(context).sos_alert}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -181,7 +182,7 @@ class SosAlertsPanel {
                                     LocationService.openDirections(
                                       lat,
                                       lng,
-                                      label: 'SOS Alert - $reporter',
+                                      label: '${AppLocalizations.of(context).sos_alert} - $reporter',
                                     );
                                   },
                                   borderRadius: BorderRadius.circular(8),

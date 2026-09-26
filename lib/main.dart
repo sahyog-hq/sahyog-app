@@ -2,8 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'src/app.dart';
+import 'src/core/language_provider.dart';
 
-void main() {
+final languageProvider = LanguageProvider();
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: SahyogApp()));
+  await languageProvider.load();
+  runApp(
+    ProviderScope(
+      child: LanguageScope(
+        notifier: languageProvider,
+        child: const SahyogApp(),
+      ),
+    ),
+  );
 }
+
