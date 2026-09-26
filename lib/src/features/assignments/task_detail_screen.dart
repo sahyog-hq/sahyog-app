@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
 import '../../core/app_permissions.dart';
+import '../../core/friendly_error.dart';
+import '../../widgets/submit_loader.dart';
 import '../../core/models.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
@@ -65,36 +67,31 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
     if (picked == null) return;
 
-    setState(() => _loading = true);
-    try {
-      final urls = await widget.api.uploadImages(
-        [picked.path],
-        folder: 'tasks',
-      );
-      final updated = await widget.api.patch(
-        '/api/v1/tasks/${_task['id']}/status',
-        body: {
-          'status': 'completed',
-          'proof_images': urls,
-          'persons_helped': 1,
-        },
-      );
-      if (mounted) {
-        setState(() {
-          _task = updated as Map<String, dynamic>;
-          _loading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Proof uploaded and task completed!')),
+    final ok = await runWithLoader(
+      context,
+      message: 'Uploading proof…',
+      action: () async {
+        final urls = await widget.api.uploadImages(
+          [picked.path],
+          folder: 'tasks',
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _loading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
-      }
+        final updated = await widget.api.patch(
+          '/api/v1/tasks/${_task['id']}/status',
+          body: {
+            'status': 'completed',
+            'proof_images': urls,
+            'persons_helped': 1,
+          },
+        );
+        if (mounted) {
+          setState(() => _task = updated as Map<String, dynamic>);
+        }
+      },
+    );
+    if (ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Proof uploaded and task completed!')),
+      );
     }
   }
 

@@ -9,6 +9,8 @@ import '../../core/app_permissions.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/expandable_record_card.dart';
+import '../../widgets/submit_loader.dart';
+import '../../core/friendly_error.dart';
 import 'package:sahyog_app/l10n/app_localizations.dart';
 
 /// Operations tab: Volunteers / Tasks / Needs as segmented top tabs.
@@ -266,22 +268,25 @@ class _CoordinatorOperationsTabState extends State<CoordinatorOperationsTab>
     }
 
     if (_titleCtrl.text.trim().isEmpty || finalType.trim().isEmpty) {
-      _snack('Title and type are required.');
-      return;
+      throw Exception('Title and type are required.');
     }
 
     if (_selectedVolunteers.isEmpty) {
-      _snack('At least one volunteer must be assigned.');
-      return;
+      throw Exception('At least one volunteer must be assigned.');
     }
     try {
       setState(() => _creating = true);
-      final proofImages = _taskImage == null
-          ? <String>[]
-          : await widget.api.uploadImages(
-              [_taskImage!.path],
-              folder: 'tasks',
-            );
+      List<String> proofImages = [];
+      if (_taskImage != null) {
+        try {
+          proofImages = await widget.api.uploadImages(
+            [_taskImage!.path],
+            folder: 'tasks',
+          );
+        } catch (uploadError) {
+          _snack(friendlyError(uploadError));
+        }
+      }
       Map<String, dynamic> baseBody = {
         'title': _titleCtrl.text.trim(),
         'type': finalType.trim(),
@@ -307,8 +312,6 @@ class _CoordinatorOperationsTabState extends State<CoordinatorOperationsTab>
       });
       _snack('Task created.');
       await _load();
-    } catch (e) {
-      _snack('Create failed: $e');
     } finally {
       if (mounted) setState(() => _creating = false);
     }
@@ -830,12 +833,16 @@ class _CoordinatorOperationsTabState extends State<CoordinatorOperationsTab>
                       child: FilledButton.icon(
                         onPressed: _creating
                             ? null
-                            : () {
-                                Navigator.pop(ctx);
-                                _createTask();
+                            : () async {
+                                final ok = await runWithLoader(
+                                  context,
+                                  message: 'Creating task…',
+                                  action: _createTask,
+                                );
+                                if (ok && ctx.mounted) Navigator.pop(ctx);
                               },
                         icon: const Icon(Icons.add_task),
-                        label: const Text('Create Task'),
+                        label: Text(_creating ? 'Creating…' : 'Create Task'),
                       ),
                     ),
                     const SizedBox(height: 24),

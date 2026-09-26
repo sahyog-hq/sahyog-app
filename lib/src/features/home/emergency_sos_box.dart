@@ -15,6 +15,8 @@ import 'nearby_sos_radar_sheet.dart';
 import 'sos_alerts_panel.dart';
 import '../../core/mesh_service.dart';
 import '../../core/tinyml_sensor_service.dart';
+import '../../core/friendly_error.dart';
+import '../../widgets/submit_loader.dart';
 
 class EmergencySosBox extends StatefulWidget {
   const EmergencySosBox({
@@ -77,7 +79,6 @@ class EmergencySosBoxState extends State<EmergencySosBox>
     final db = DatabaseHelper.instance;
 
     try {
-    // Prevent double-trigger: check if already active
     final existing = await db.getActiveIncident(widget.user.id);
     if (existing != null) {
       SosLog.event(existing.uuid, 'DOUBLE_TRIGGER_BLOCKED');
@@ -91,82 +92,87 @@ class EmergencySosBoxState extends State<EmergencySosBox>
       return;
     }
 
-    // 1. Fetch location (12s timeout)
-    Position? pos;
-    try {
-      pos = await _locationService.getCurrentPosition().timeout(
-        const Duration(seconds: 12),
-      );
-    } catch (_) {}
+    if (!mounted) return;
+    await runWithLoader(
+      context,
+      message: 'Sending SOS…',
+      action: () async {
+        Position? pos;
+        try {
+          pos = await _locationService.getCurrentPosition().timeout(
+            const Duration(seconds: 12),
+          );
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(friendlyError(e))),
+            );
+          }
+        }
 
-    // 2. Create SOS incident
-    final incident = SosIncident(
-      reporterId: widget.user.id,
-      lat: pos?.latitude,
-      lng: pos?.longitude,
-      type: anomalyType ?? 'Emergency',
-      status: SosStatus.activating,
-    );
-
-    SosLog.event(
-      incident.uuid,
-      'ACTIVATE',
-      'lat=${pos?.latitude}, lng=${pos?.longitude}',
-    );
-
-    // 3. Save to SQLite -> transition offline
-    await db.insertSosIncident(incident);
-    await db.atomicUpdateIncident(
-      incident.uuid,
-      status: SosStatus.activeOffline,
-    );
-
-    if (mounted) {
-      setState(() {
-        _activeLocalUuid = incident.uuid;
-        _sosFired = true;
-      });
-    }
-
-    // 4. Force a network sync
-    SosLog.event(incident.uuid, 'IMMEDIATE_SYNC_ATTEMPT');
-    await SosSyncEngine.instance.syncAll();
-    
-    // Always broadcast via BLE Mesh to alert nearby users regardless of network status!
-    MeshService.instance.startBroadcastingSOS({
-      'uuid': incident.uuid,
-      'type': incident.type,
-      'lat': pos?.latitude,
-      'lng': pos?.longitude,
-      'reporter_id': widget.user.id,
-      'reporter_name': widget.user.name,
-      'reporter_phone': widget.user.phone,
-      'hop_count': 0,
-    });
-
-    final updated = await db.getIncidentByUuid(incident.uuid);
-    if (updated != null && updated.status == SosStatus.activeOnline) {
-      if (mounted) {
-        setState(() {
-          _activeSosId = updated.backendId;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(
-            content: Text('SOS Activated! Broadcasting to Web & BLE Mesh...'),
-            backgroundColor: AppColors.criticalRed,
-            duration: const Duration(seconds: 3),
-          ),
+        final incident = SosIncident(
+          reporterId: widget.user.id,
+          lat: pos?.latitude,
+          lng: pos?.longitude,
+          type: anomalyType ?? 'Emergency',
+          status: SosStatus.activating,
         );
-      }
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
-          content: Text('Offline! Broadcasting SOS via BLE Mesh...'),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
+
+        SosLog.event(
+          incident.uuid,
+          'ACTIVATE',
+          'lat=${pos?.latitude}, lng=${pos?.longitude}',
+        );
+
+        await db.insertSosIncident(incident);
+        await db.atomicUpdateIncident(
+          incident.uuid,
+          status: SosStatus.activeOffline,
+        );
+
+        if (mounted) {
+          setState(() {
+            _activeLocalUuid = incident.uuid;
+            _sosFired = true;
+          });
+        }
+
+        SosLog.event(incident.uuid, 'IMMEDIATE_SYNC_ATTEMPT');
+        await SosSyncEngine.instance.syncAll();
+
+        MeshService.instance.startBroadcastingSOS({
+          'uuid': incident.uuid,
+          'type': incident.type,
+          'lat': pos?.latitude,
+          'lng': pos?.longitude,
+          'reporter_id': widget.user.id,
+          'reporter_name': widget.user.name,
+          'reporter_phone': widget.user.phone,
+          'hop_count': 0,
+        });
+
+        final updated = await db.getIncidentByUuid(incident.uuid);
+        if (!mounted) return;
+        if (updated != null && updated.status == SosStatus.activeOnline) {
+          setState(() => _activeSosId = updated.backendId);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('SOS Activated! Broadcasting to Web & BLE Mesh...'),
+              backgroundColor: AppColors.criticalRed,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Offline! Broadcasting SOS via BLE Mesh...'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      },
+    );
     } finally {
       _sending = false;
     }

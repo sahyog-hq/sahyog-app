@@ -16,16 +16,22 @@ class LocationService {
       return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 12),
+          timeLimit: Duration(seconds: 10),
         ),
       );
     } catch (_) {
-      return Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 8),
-        ),
-      );
+      try {
+        return await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 6),
+          ),
+        );
+      } catch (_) {
+        final last = await Geolocator.getLastKnownPosition();
+        if (last != null) return last;
+        throw Exception('Location unavailable. You can continue without it.');
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 typedef TokenProvider = Future<String?> Function();
 
@@ -104,7 +105,14 @@ class ApiClient {
     final request = http.MultipartRequest('POST', uri);
     request.headers['Authorization'] = 'Bearer $token';
     for (final path in existing) {
-      request.files.add(await http.MultipartFile.fromPath('images', path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'images',
+          path,
+          filename: path.split(Platform.pathSeparator).last,
+          contentType: _imageType(path),
+        ),
+      );
     }
 
     final streamed = await request.send();
@@ -155,4 +163,14 @@ class ApiClient {
 
     throw ApiException(response.statusCode, message, body: response.body);
   }
+}
+
+MediaType _imageType(String path) {
+  final lower = path.toLowerCase();
+  if (lower.endsWith('.png')) return MediaType('image', 'png');
+  if (lower.endsWith('.webp')) return MediaType('image', 'webp');
+  if (lower.endsWith('.heic') || lower.endsWith('.heif')) {
+    return MediaType('image', 'heic');
+  }
+  return MediaType('image', 'jpeg');
 }

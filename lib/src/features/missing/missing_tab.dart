@@ -9,6 +9,7 @@ import '../../core/location_service.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/expandable_record_card.dart';
+import '../../widgets/submit_loader.dart';
 import 'package:sahyog_app/l10n/app_localizations.dart';
 
 class MissingTab extends StatefulWidget {
@@ -83,21 +84,31 @@ class _MissingTabState extends State<MissingTab>
 
   Future<void> _submitReport() async {
     if (_phoneCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reporter phone is required')),
-      );
-      return;
+      throw Exception('Reporter phone is required');
     }
 
     try {
       setState(() => _submitting = true);
 
-      final photoUrls = _pickedReportPhoto == null
-          ? <String>[]
-          : await widget.api.uploadImages(
-              [_pickedReportPhoto!.path],
-              folder: 'missing',
+      List<String> photoUrls = [];
+      if (_pickedReportPhoto != null) {
+        try {
+          photoUrls = await widget.api.uploadImages(
+            [_pickedReportPhoto!.path],
+            folder: 'missing',
+          );
+        } catch (uploadError) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Photo could not be saved. Submitting report without it.',
+                ),
+              ),
             );
+          }
+        }
+      }
 
       final body = <String, dynamic>{
         'reporter_phone': _phoneCtrl.text.trim(),
@@ -128,11 +139,6 @@ class _MissingTabState extends State<MissingTab>
       _lng = null;
 
       await _loadBoard();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Submit failed: $e')));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -502,11 +508,21 @@ class _MissingTabState extends State<MissingTab>
                       child: FilledButton(
                         onPressed: _submitting
                             ? null
-                            : () {
-                                Navigator.pop(ctx);
-                                _submitReport();
+                            : () async {
+                                final ok = await runWithLoader(
+                                  context,
+                                  message: 'Submitting report…',
+                                  action: _submitReport,
+                                );
+                                if (ok && ctx.mounted) Navigator.pop(ctx);
                               },
-                        child: const Text('Submit Report'),
+                        child: _submitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Submit Report'),
                       ),
                     ),
                     const SizedBox(height: 24),

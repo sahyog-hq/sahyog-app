@@ -10,6 +10,8 @@ import '../../core/location_service.dart';
 import '../../core/remote_report_image.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/expandable_record_card.dart';
+import '../../widgets/submit_loader.dart';
+import '../../core/friendly_error.dart';
 import 'package:sahyog_app/l10n/app_localizations.dart';
 
 /// Coordinator Missing Persons — single tab (no report form).
@@ -301,20 +303,25 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
   Future<void> _submitReport() async {
     final phone = _phoneCtrl.text.trim();
     if (phone.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Phone is required.')));
-      return;
+      throw Exception('Phone is required.');
     }
 
     setState(() => _submitting = true);
     try {
-      final photoUrls = _pickedPhoto == null
-          ? <String>[]
-          : await widget.api.uploadImages(
-              [_pickedPhoto!.path],
-              folder: 'missing',
-            );
+      List<String> photoUrls = [];
+      if (_pickedPhoto != null) {
+        try {
+          photoUrls = await widget.api.uploadImages(
+            [_pickedPhoto!.path],
+            folder: 'missing',
+          );
+        } catch (uploadError) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(uploadError))),
+          );
+        }
+      }
       final body = <String, dynamic>{
         'reporter_phone': phone,
         'name': _nameCtrl.text.trim().isEmpty ? null : _nameCtrl.text.trim(),
@@ -343,11 +350,6 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
 
       Navigator.of(context).pop();
       _loadBoard();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Submission failed: $e')));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -450,8 +452,22 @@ class _CoordinatorMissingTabState extends State<CoordinatorMissingTab>
                   child: const Text('Cancel'),
                 ),
                 FilledButton(
-                  onPressed: _submitting ? null : _submitReport,
-                  child: const Text('Submit'),
+                  onPressed: _submitting
+                      ? null
+                      : () async {
+                          await runWithLoader(
+                            context,
+                            message: 'Submitting report…',
+                            action: _submitReport,
+                          );
+                        },
+                  child: _submitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Submit'),
                 ),
               ],
             );
