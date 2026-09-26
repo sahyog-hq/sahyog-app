@@ -221,4 +221,67 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get unassigned => 'अनियुक्त';
+
+  @override
+  String get holdForSos => 'एसओएस के लिए होल्ड करें';
+
+  @override
+  String get holdToRequestHelp => 'मदद के लिए 5 सेकंड होल्ड करें';
+
+  @override
+  String slideAType(String seconds) {
+    return 'प्रकार चुनें • $secondsसे';
+  }
+
+  @override
+  String keepHoldingSlide(String type) {
+    return 'होल्ड रखें — $type पर स्लाइड करें';
+  }
+
+  @override
+  String get sosActive => 'एसओएस सक्रिय';
+
+  @override
+  String get holdToCancelSos => 'रद्द करने के लिए 5 सेकंड होल्ड करें';
+
+  @override
+  String get releasing => 'रद्द हो रहा है...';
+
+  @override
+  String releaseIn(String seconds) {
+    return '$secondsसे में छोड़ें';
+  }
+
+  @override
+  String get disasterFlood => 'बाढ़';
+
+  @override
+  String get disasterEarthquake => 'भूकंप';
+
+  @override
+  String get disasterFire => 'आग';
+
+  @override
+  String get disasterLandslide => 'भूस्खलन';
+
+  @override
+  String get disasterMedical => 'चिकित्सा';
+
+  @override
+  String get disasterAccident => 'दुर्घटना';
+
+  @override
+  String get disasterOther => 'अन्य';
+
+  @override
+  String get recentDisasterAlerts => 'हाल की आपदा चेतावनियाँ';
+
+  @override
+  String get reportMissing => 'लापता रिपोर्ट करें';
+
+  @override
+  String get volunteer => 'स्वयंसेवक';
+
+  @override
+  String get coordinator => 'समन्वयक';
 }

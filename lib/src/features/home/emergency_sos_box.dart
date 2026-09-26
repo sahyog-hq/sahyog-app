@@ -18,6 +18,7 @@ import '../../core/mesh_service.dart';
 import '../../core/tinyml_sensor_service.dart';
 import '../../core/friendly_error.dart';
 import '../../widgets/submit_loader.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 
 class EmergencySosBox extends StatefulWidget {
   const EmergencySosBox({
@@ -49,15 +50,27 @@ class EmergencySosBoxState extends State<EmergencySosBox>
   String _selectedDisaster = 'Emergency';
   int? _activePointer;
 
-  static const _disasterTypes = <({String label, String value, IconData icon})>[
-    (label: 'Flood', value: 'Flood', icon: Icons.flood_outlined),
-    (label: 'Quake', value: 'Earthquake', icon: Icons.landslide_outlined),
-    (label: 'Fire', value: 'Fire', icon: Icons.local_fire_department_outlined),
-    (label: 'Slide', value: 'Landslide', icon: Icons.terrain_outlined),
-    (label: 'Medical', value: 'Medical', icon: Icons.medical_services_outlined),
-    (label: 'Crash', value: 'Accident', icon: Icons.car_crash_outlined),
-    (label: 'Other', value: 'Emergency', icon: Icons.emergency_outlined),
+  static const _disasterTypes = <({String value, IconData icon})>[
+    (value: 'Flood', icon: Icons.flood_outlined),
+    (value: 'Earthquake', icon: Icons.landslide_outlined),
+    (value: 'Fire', icon: Icons.local_fire_department_outlined),
+    (value: 'Landslide', icon: Icons.terrain_outlined),
+    (value: 'Medical', icon: Icons.medical_services_outlined),
+    (value: 'Accident', icon: Icons.car_crash_outlined),
+    (value: 'Emergency', icon: Icons.emergency_outlined),
   ];
+
+  String _disasterLabel(AppLocalizations l10n, String value) {
+    return switch (value) {
+      'Flood' => l10n.disasterFlood,
+      'Earthquake' => l10n.disasterEarthquake,
+      'Fire' => l10n.disasterFire,
+      'Landslide' => l10n.disasterLandslide,
+      'Medical' => l10n.disasterMedical,
+      'Accident' => l10n.disasterAccident,
+      _ => l10n.disasterOther,
+    };
+  }
 
   final Map<String, GlobalKey> _chipKeys = {
     for (final type in _disasterTypes) type.value: GlobalKey(),
@@ -445,6 +458,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l10n = AppLocalizations.of(context);
     final double progress = (_sosHoldTicks / 50.0).clamp(0.0, 1.0);
 
     return Column(
@@ -547,7 +561,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  _sosHoldTicks > 0 ? 'RELEASING...' : 'SOS ACTIVE',
+                                  _sosHoldTicks > 0 ? l10n.releasing : l10n.sosActive,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w900,
@@ -558,8 +572,8 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                                 const SizedBox(height: 3),
                                 Text(
                                   _sosHoldTicks > 0
-                                      ? 'Release in ${(5.0 - (_sosHoldTicks / 10)).toStringAsFixed(1)}s'
-                                      : 'Hold 5s to cancel the SOS',
+                                      ? l10n.releaseIn((5.0 - (_sosHoldTicks / 10)).toStringAsFixed(1))
+                                      : l10n.holdToCancelSos,
                                   style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 12,
@@ -785,8 +799,8 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                                         children: [
                                           Text(
                                             _sosHoldTicks > 0
-                                                ? _selectedDisaster.toUpperCase()
-                                                : 'HOLD FOR SOS',
+                                                ? _disasterLabel(l10n, _selectedDisaster)
+                                                : l10n.holdForSos,
                                             style: const TextStyle(
                                               color: AppColors.criticalRed,
                                               fontWeight: FontWeight.w900,
@@ -797,8 +811,8 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                                           const SizedBox(height: 3),
                                           Text(
                                             _sosHoldTicks > 0
-                                                ? 'Slide a type • ${(5.0 - (_sosHoldTicks / 10)).toStringAsFixed(1)}s'
-                                                : 'Hold 5s to request help',
+                                                ? l10n.slideAType((5.0 - (_sosHoldTicks / 10)).toStringAsFixed(1))
+                                                : l10n.holdToRequestHelp,
                                             style: TextStyle(
                                               color: Colors.black54,
                                               fontSize: 12,
@@ -854,7 +868,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                         child: Column(
                           children: [
                             Text(
-                              'Keep holding — slide to ${_selectedDisaster}',
+                              l10n.keepHoldingSlide(_disasterLabel(l10n, _selectedDisaster)),
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -870,7 +884,7 @@ class EmergencySosBoxState extends State<EmergencySosBox>
                                 for (final type in _disasterTypes)
                                   _DisasterHoldChip(
                                     key: _chipKeys[type.value],
-                                    label: type.label,
+                                    label: _disasterLabel(l10n, type.value),
                                     icon: type.icon,
                                     selected: _selectedDisaster == type.value,
                                   ),

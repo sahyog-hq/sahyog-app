@@ -299,7 +299,7 @@ class _UserAppShellState extends State<UserAppShell> {
           ],
         ),
         actions: [
-          const _RoleChip(label: 'CITIZEN', color: Colors.orange),
+          _RoleChip(label: l10n.citizen, color: Colors.orange),
           const SizedBox(width: 4),
           _RefreshControl(
             onRefresh: () {
@@ -436,7 +436,7 @@ class _GeneralAppShellState extends State<GeneralAppShell> {
           ],
         ),
         actions: [
-          const _RoleChip(label: 'VOLUNTEER', color: AppColors.primaryGreen),
+          _RoleChip(label: l10n.volunteer, color: AppColors.primaryGreen),
           const SizedBox(width: 4),
           _RefreshControl(
             onRefresh: () {
@@ -598,7 +598,7 @@ class _CoordinatorAppShellState extends State<CoordinatorAppShell> {
           ],
         ),
         actions: [
-          const _RoleChip(label: 'TEAM LEAD', color: AppColors.infoBlue),
+          _RoleChip(label: l10n.coordinator, color: AppColors.infoBlue),
           const SizedBox(width: 4),
           _RefreshControl(
             onRefresh: () {

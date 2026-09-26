@@ -552,7 +552,7 @@ class _MissingTabState extends State<MissingTab>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showReportForm,
         icon: const Icon(Icons.add),
-        label: const Text('Report Missing'),
+        label: Text(AppLocalizations.of(context).reportMissing),
       ),
     );
   }

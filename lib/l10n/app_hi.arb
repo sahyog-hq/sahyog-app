@@ -82,5 +82,39 @@
   "reporterPhone": "रिपोर्टर फ़ोन",
   "lastSeen": "अंतिम बार देखा",
   "assignedTo": "सौंपा गया",
-  "unassigned": "अनियुक्त"
+  "unassigned": "अनियुक्त",
+  "holdForSos": "एसओएस के लिए होल्ड करें",
+  "holdToRequestHelp": "मदद के लिए 5 सेकंड होल्ड करें",
+  "slideAType": "प्रकार चुनें • {seconds}से",
+  "@slideAType": {
+    "placeholders": {
+      "seconds": {"type": "String"}
+    }
+  },
+  "keepHoldingSlide": "होल्ड रखें — {type} पर स्लाइड करें",
+  "@keepHoldingSlide": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "sosActive": "एसओएस सक्रिय",
+  "holdToCancelSos": "रद्द करने के लिए 5 सेकंड होल्ड करें",
+  "releasing": "रद्द हो रहा है...",
+  "releaseIn": "{seconds}से में छोड़ें",
+  "@releaseIn": {
+    "placeholders": {
+      "seconds": {"type": "String"}
+    }
+  },
+  "disasterFlood": "बाढ़",
+  "disasterEarthquake": "भूकंप",
+  "disasterFire": "आग",
+  "disasterLandslide": "भूस्खलन",
+  "disasterMedical": "चिकित्सा",
+  "disasterAccident": "दुर्घटना",
+  "disasterOther": "अन्य",
+  "recentDisasterAlerts": "हाल की आपदा चेतावनियाँ",
+  "reportMissing": "लापता रिपोर्ट करें",
+  "volunteer": "स्वयंसेवक",
+  "coordinator": "समन्वयक"
 }

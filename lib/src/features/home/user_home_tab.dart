@@ -13,6 +13,7 @@ import 'sos_alerts_panel.dart';
 import 'emergency_sos_box.dart';
 import 'tinyml_control_card.dart';
 import '../../theme/app_colors.dart';
+import 'package:sahyog_app/l10n/app_localizations.dart';
 
 class UserHomeTab extends StatefulWidget {
   const UserHomeTab({
@@ -234,7 +235,7 @@ class _UserHomeTabState extends State<UserHomeTab>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Recent Disaster Alerts',
+                      AppLocalizations.of(context).recentDisasterAlerts,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         letterSpacing: -0.5,

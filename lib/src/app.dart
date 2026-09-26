@@ -30,6 +30,7 @@ class SahyogApp extends StatelessWidget {
         defaultLaunchMode: LaunchMode.externalApplication,
       ),
       child: MaterialApp(
+        key: ValueKey('locale-${language.locale.languageCode}'),
         title: 'Sahyog',
         locale: language.locale,
         supportedLocales: AppLocalizations.supportedLocales,

@@ -507,6 +507,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unassigned'**
   String get unassigned;
+
+  /// No description provided for @holdForSos.
+  ///
+  /// In en, this message translates to:
+  /// **'HOLD FOR SOS'**
+  String get holdForSos;
+
+  /// No description provided for @holdToRequestHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold 5s to request help'**
+  String get holdToRequestHelp;
+
+  /// No description provided for @slideAType.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide a type • {seconds}s'**
+  String slideAType(String seconds);
+
+  /// No description provided for @keepHoldingSlide.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep holding — slide to {type}'**
+  String keepHoldingSlide(String type);
+
+  /// No description provided for @sosActive.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS ACTIVE'**
+  String get sosActive;
+
+  /// No description provided for @holdToCancelSos.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold 5s to cancel the SOS'**
+  String get holdToCancelSos;
+
+  /// No description provided for @releasing.
+  ///
+  /// In en, this message translates to:
+  /// **'RELEASING...'**
+  String get releasing;
+
+  /// No description provided for @releaseIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Release in {seconds}s'**
+  String releaseIn(String seconds);
+
+  /// No description provided for @disasterFlood.
+  ///
+  /// In en, this message translates to:
+  /// **'Flood'**
+  String get disasterFlood;
+
+  /// No description provided for @disasterEarthquake.
+  ///
+  /// In en, this message translates to:
+  /// **'Quake'**
+  String get disasterEarthquake;
+
+  /// No description provided for @disasterFire.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire'**
+  String get disasterFire;
+
+  /// No description provided for @disasterLandslide.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide'**
+  String get disasterLandslide;
+
+  /// No description provided for @disasterMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical'**
+  String get disasterMedical;
+
+  /// No description provided for @disasterAccident.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash'**
+  String get disasterAccident;
+
+  /// No description provided for @disasterOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get disasterOther;
+
+  /// No description provided for @recentDisasterAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Disaster Alerts'**
+  String get recentDisasterAlerts;
+
+  /// No description provided for @reportMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Report Missing'**
+  String get reportMissing;
+
+  /// No description provided for @volunteer.
+  ///
+  /// In en, this message translates to:
+  /// **'VOLUNTEER'**
+  String get volunteer;
+
+  /// No description provided for @coordinator.
+  ///
+  /// In en, this message translates to:
+  /// **'COORDINATOR'**
+  String get coordinator;
 }
 
 class _AppLocalizationsDelegate

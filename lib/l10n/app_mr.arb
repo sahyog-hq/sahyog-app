@@ -82,5 +82,39 @@
   "reporterPhone": "रिपोर्टर फोन",
   "lastSeen": "शेवटचे दिसले",
   "assignedTo": "नेमून दिले",
-  "unassigned": "नेमलेले नाही"
+  "unassigned": "नेमलेले नाही",
+  "holdForSos": "एसओएससाठी होल्ड करा",
+  "holdToRequestHelp": "मदतीसाठी ५ सेकंद धरून ठेवा",
+  "slideAType": "प्रकार निवडा • {seconds}से",
+  "@slideAType": {
+    "placeholders": {
+      "seconds": {"type": "String"}
+    }
+  },
+  "keepHoldingSlide": "धरून ठेवा — {type} वर स्लाइड करा",
+  "@keepHoldingSlide": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "sosActive": "एसओएस सुरू",
+  "holdToCancelSos": "रद्द करण्यासाठी ५ सेकंद धरा",
+  "releasing": "रद्द होत आहे...",
+  "releaseIn": "{seconds}से मध्ये सोडा",
+  "@releaseIn": {
+    "placeholders": {
+      "seconds": {"type": "String"}
+    }
+  },
+  "disasterFlood": "पूर",
+  "disasterEarthquake": "भूकंप",
+  "disasterFire": "आग",
+  "disasterLandslide": "भूस्खलन",
+  "disasterMedical": "वैद्यकीय",
+  "disasterAccident": "अपघात",
+  "disasterOther": "इतर",
+  "recentDisasterAlerts": "अलीकडील आपत्ती सूचना",
+  "reportMissing": "बेपत्ता नोंदवा",
+  "volunteer": "स्वयंसेवक",
+  "coordinator": "समन्वयक"
 }

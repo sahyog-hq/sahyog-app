@@ -82,5 +82,39 @@
   "reporterPhone": "Reporter phone",
   "lastSeen": "Last seen",
   "assignedTo": "Assigned to",
-  "unassigned": "Unassigned"
+  "unassigned": "Unassigned",
+  "holdForSos": "HOLD FOR SOS",
+  "holdToRequestHelp": "Hold 5s to request help",
+  "slideAType": "Slide a type • {seconds}s",
+  "@slideAType": {
+    "placeholders": {
+      "seconds": {"type": "String"}
+    }
+  },
+  "keepHoldingSlide": "Keep holding — slide to {type}",
+  "@keepHoldingSlide": {
+    "placeholders": {
+      "type": {"type": "String"}
+    }
+  },
+  "sosActive": "SOS ACTIVE",
+  "holdToCancelSos": "Hold 5s to cancel the SOS",
+  "releasing": "RELEASING...",
+  "releaseIn": "Release in {seconds}s",
+  "@releaseIn": {
+    "placeholders": {
+      "seconds": {"type": "String"}
+    }
+  },
+  "disasterFlood": "Flood",
+  "disasterEarthquake": "Quake",
+  "disasterFire": "Fire",
+  "disasterLandslide": "Slide",
+  "disasterMedical": "Medical",
+  "disasterAccident": "Crash",
+  "disasterOther": "Other",
+  "recentDisasterAlerts": "Recent Disaster Alerts",
+  "reportMissing": "Report Missing",
+  "volunteer": "VOLUNTEER",
+  "coordinator": "COORDINATOR"
 }

@@ -221,4 +221,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unassigned => 'Unassigned';
+
+  @override
+  String get holdForSos => 'HOLD FOR SOS';
+
+  @override
+  String get holdToRequestHelp => 'Hold 5s to request help';
+
+  @override
+  String slideAType(String seconds) {
+    return 'Slide a type • ${seconds}s';
+  }
+
+  @override
+  String keepHoldingSlide(String type) {
+    return 'Keep holding — slide to $type';
+  }
+
+  @override
+  String get sosActive => 'SOS ACTIVE';
+
+  @override
+  String get holdToCancelSos => 'Hold 5s to cancel the SOS';
+
+  @override
+  String get releasing => 'RELEASING...';
+
+  @override
+  String releaseIn(String seconds) {
+    return 'Release in ${seconds}s';
+  }
+
+  @override
+  String get disasterFlood => 'Flood';
+
+  @override
+  String get disasterEarthquake => 'Quake';
+
+  @override
+  String get disasterFire => 'Fire';
+
+  @override
+  String get disasterLandslide => 'Slide';
+
+  @override
+  String get disasterMedical => 'Medical';
+
+  @override
+  String get disasterAccident => 'Crash';
+
+  @override
+  String get disasterOther => 'Other';
+
+  @override
+  String get recentDisasterAlerts => 'Recent Disaster Alerts';
+
+  @override
+  String get reportMissing => 'Report Missing';
+
+  @override
+  String get volunteer => 'VOLUNTEER';
+
+  @override
+  String get coordinator => 'COORDINATOR';
 }
